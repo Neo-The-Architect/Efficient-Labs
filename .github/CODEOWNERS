@@ -1,0 +1,16 @@
+# CODEOWNERS for Efficient Labs.
+#
+# Ownership is explicit even with one owner. The discipline marker matters:
+# every path in this repo has a defined owner who reviews changes to it.
+# Today the owner is the operator on every path. That is honest about how
+# the team is structured (single operator) while still recording the
+# commitment that no path is unowned.
+#
+# Format documented at:
+#   https://docs.github.com/en/repositories/managing-your-repositories-settings-and-security/customizing-your-repository/about-code-owners
+#
+# When the team grows, this file gets domain-specific entries (e.g.
+# infra/postgres-related paths owned by an SRE; legal/* owned by counsel
+# once retained). Until then, the wildcard captures the reality.
+
+* @Neo-The-Architect
