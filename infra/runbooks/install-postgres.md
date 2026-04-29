@@ -339,8 +339,8 @@ sudo systemctl daemon-reload
 **No passwords are committed to this repo, ever.** The `<GENERATED_AT_DEPLOY>` placeholder in step 7 is replaced at deploy time with a freshly-generated password per role:
 
 ```bash
-PAPERCLIP_PG_PASSWORD=$(openssl rand -base64 32)
-WEFT_PG_PASSWORD=$(openssl rand -base64 32)
+PAPERCLIP_PG_PASSWORD=$(openssl rand -hex 32)
+WEFT_PG_PASSWORD=$(openssl rand -hex 32)
 
 sudo -u postgres psql -c "ALTER ROLE paperclip WITH PASSWORD '${PAPERCLIP_PG_PASSWORD}';"
 sudo -u postgres psql -c "ALTER ROLE weft      WITH PASSWORD '${WEFT_PG_PASSWORD}';"
