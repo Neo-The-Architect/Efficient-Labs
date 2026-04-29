@@ -19,7 +19,7 @@ Two key decisions inherited from [ADR 0002](../../docs/adr/0002-postgres-single-
 
 - Ubuntu 24.04 LTS host with `sudo` access.
 - Hardened baseline already in place (Lynis ≥ 85, Tailscale-only ingress, no public TCP except those exposed deliberately via Tailscale Funnel).
-- ≥ 2 GB RAM available; ≥ 20 GB free at `/var/lib/postgresql/`.
+- ≥ 2 GB RAM available; ≥ 20 GB free at `/var/lib/postgresql/`. On the EL VPS (which co-hosts Restate, Weft, Paperclip), see [`install-restate.md`](install-restate.md) for the full-stack RAM minimum (≥ 4 GB).
 - At-rest disk encryption (LUKS or equivalent) on the data path. Postgres does not encrypt data files itself; full-disk encryption is the layer responsible.
 - The host clock is sane and NTP-synced. Backup timestamps and WAL ordering both depend on this.
 
@@ -32,7 +32,7 @@ If any of the above is not yet true, fix it before proceeding — none of these 
 The distribution-shipped Postgres lags the upstream release train by ~12 months. The official PostgreSQL Global Development Group (PGDG) repository ships current minor versions for every supported major. Pin to **PostgreSQL 16** — the current production-supported major as of April 2026, EOL November 2028 ([postgresql.org versioning policy](https://www.postgresql.org/support/versioning/)).
 
 ```bash
-sudo apt install -y curl ca-certificates gnupg lsb-release
+sudo apt update && sudo apt install -y curl ca-certificates lsb-release
 sudo install -d /usr/share/postgresql-common/pgdg
 sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
     -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
@@ -216,7 +216,7 @@ RETENTION_DAYS=14
 
 for db in paperclip weft; do
     out="${BACKUP_DIR}/${db}-${TIMESTAMP}.dump"
-    sudo -u postgres pg_dump --format=custom --no-owner --no-acl \
+    pg_dump --format=custom --no-owner --no-acl \
         --file="${out}" "${db}"
     chmod 0640 "${out}"
 done
@@ -225,7 +225,31 @@ done
 find "${BACKUP_DIR}" -type f -name '*.dump' -mtime +${RETENTION_DAYS} -delete
 ```
 
-Install:
+Write the script body above to `/tmp/postgres-backup.sh` (the literal contents of the code block, not just a placeholder):
+
+```bash
+cat > /tmp/postgres-backup.sh <<'BACKUP_SCRIPT_EOF'
+#!/usr/bin/env bash
+# Local nightly Postgres backup. Off-host shipping is a separate stage.
+set -euo pipefail
+
+BACKUP_DIR=/var/backups/postgresql
+TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
+RETENTION_DAYS=14
+
+for db in paperclip weft; do
+    out="${BACKUP_DIR}/${db}-${TIMESTAMP}.dump"
+    pg_dump --format=custom --no-owner --no-acl \
+        --file="${out}" "${db}"
+    chmod 0640 "${out}"
+done
+
+# Prune backups older than RETENTION_DAYS.
+find "${BACKUP_DIR}" -type f -name '*.dump' -mtime +${RETENTION_DAYS} -delete
+BACKUP_SCRIPT_EOF
+```
+
+Install it into `/usr/local/bin/`:
 
 ```bash
 sudo install -m 0750 -o root -g postgres /tmp/postgres-backup.sh /usr/local/bin/postgres-backup.sh
@@ -241,6 +265,8 @@ Requires=postgresql@16-main.service
 
 [Service]
 Type=oneshot
+User=postgres
+Group=postgres
 ExecStart=/usr/local/bin/postgres-backup.sh
 ```
 
