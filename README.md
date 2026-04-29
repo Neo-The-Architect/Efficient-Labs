@@ -12,6 +12,14 @@ The build commitment is public-by-default. Every Weft program, every SKILL.md, e
 
 The canonical design document for the whole system lives at [`docs/architecture/2026-04-27-fulfillment-architecture-report.md`](docs/architecture/2026-04-27-fulfillment-architecture-report.md). Read it before contributing or evaluating.
 
+## Operating Methodology
+
+Efficient Labs operates within [The Orchestration Framework](https://github.com/Neo-The-Architect/The-Orchestration-Framework) — a public methodology that defines how a single human operator commands an agentic stack of AI tools through structured files. The framework specifies philosophical foundations, vault file architecture, agentic stack roles, operating rhythms, trigger words, and recurring failure modes.
+
+The engineering discipline visible in this repo (Architecture Decision Records, runbooks, infrastructure audits, public commit attribution to AI agents) instantiates the framework. The methodology evolves independently at its own repo and may be adopted by other operators.
+
+See [ADR 0006](docs/adr/0006-orchestration-framework-as-operating-methodology.md) for the formal decision establishing this relationship.
+
 ## Repository structure
 
 | Path | Purpose |
