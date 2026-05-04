@@ -1,19 +1,21 @@
-# Efficient Labs — Strategic Foundation v1.1
+# Efficient Labs — Strategic Foundation v1.2
 
-> **Status:** Living document. v1.1 captures the strategic foundation, operational tooling, sandboxing methodology, MRR service tiers, legal posture, and AI Trust Layer Horizon 3 candidate.
+> **Status:** Living document. v1.2 reframes Efficient Labs as the foundation of a new era of business automation: sovereignty as architectural property rather than primary thesis, the Orchestration Framework named explicitly as core IP, fundamentals-discipline grounding, security layer for foreign code, and the infinite production pipeline principle. v1.1 captured the strategic foundation, operational tooling, sandboxing methodology, MRR service tiers, legal posture, and AI Trust Layer Horizon 3 candidate.
 > **Author:** NeoTheArchitect (operator), with Claude as thinking partner and document scribe.
 > **Purpose:** Single source of truth for what Efficient Labs is, why it exists, who it serves, how it sequences building, and what tooling it operates.
 > **Discipline:** Reread when losing sight. Update when strategy genuinely shifts.
 
 ## Section 1 — Identity
 
-Efficient Labs builds infrastructure that lets people and businesses keep their data, their workflows, and their AI under their own control as the world automates around them.
+Efficient Labs builds the foundation of a new era of business automation. Regulated SMBs (healthcare, legal, financial advisory) are the proving ground — the wedge engagement that produces revenue, case studies, and platform-direction signal — not the ceiling. Builders and businesses are one unified audience seeing two faces of the same value: builders see rigorous architecture they want to copy; businesses see rigorous discipline they want to hire.
 
-The wedge product is sovereign AI fulfillment — typed n8n workflows for regulated and privacy-conscious SMBs, delivered in 14 days, fixed price.
+The wedge product is AI fulfillment for regulated and privacy-conscious SMBs — typed n8n workflows delivered in 14 days, fixed price, built on a sovereign substrate.
 
-The platform vision is a sovereignty-first technology stack — agent orchestration, hosting, data bridging, trust layer — that progressively lets clients leave centralized providers and own their stack.
+The platform vision is an AI-native operating substrate — agent orchestration, hosting, data bridging, verification layer — under which clients progressively leave centralized providers and own their stack.
 
-The cultural mission is to prove that a privacy-first, principle-led, family-funded technology business is viable at scale.
+Sovereignty, privacy, and compliance are inherent properties of the architecture, not the marketing thesis. They are how the system is built. The thesis is what the system is for: the foundation of a new era of business automation.
+
+The cultural mission is to prove that a principle-led, family-funded technology business can be the foundation of that new era — that discipline and sovereignty are not at odds with scale, but are how durable scale gets built.
 
 ## Section 2 — The Operator
 
@@ -27,7 +29,7 @@ Sovereignty. Privacy. Ownership. Dignity. Non-negotiable. Every architectural de
 
 ## Section 4 — The Three Horizons
 
-### Horizon 1 — Foundation and first revenue (now to ~July 2026)
+### Horizon 1 — Foundation and first revenue (now to ~July 2026; public launch June 5, 2026)
 
 Goal: First paying clients, sovereign substrate verified, public engineering discipline established.
 
@@ -39,7 +41,7 @@ Success metrics: $5-15K USD revenue, 1-3 case studies in public repo, VPS Lynis 
 
 Goal: SoverClaw lands as parallel ecosystem. PII-redacting bridge productionized for vertical-specific engagements. ECS productized. Internal Trust Layer integrated across operations. Repeatable Standard tier delivery.
 
-Deliverables: SoverClaw independent codebase with vetted skill registry; PII-redacting bridge using Microsoft Presidio foundation with vertical-specific configs (healthcare, legal, finance, SMB general); ClawHub-equivalent under operator control; ECS productized hosting; internal Trust Layer (invisible security and verification layer that sits between agents and systems they touch); repeatable delivery (<2 days operator time per Standard tier engagement); back-office portal for client-facing dashboards.
+Deliverables: SoverClaw independent codebase with vetted skill registry; PII-redacting bridge using Microsoft Presidio foundation with vertical-specific configs (healthcare, legal, finance, SMB general); ClawHub-equivalent under operator control; ECS productized hosting; internal Trust Layer (invisible security and verification layer that sits between agents and systems they touch); security layer for foreign code (verification of all external repos, MCPs, skills, and connectors before substrate adoption — see Section 15); enterprise cloud development capability targeted Q1 2027 (multi-region, multi-tenant deployment patterns layered on top of sovereign substrate primitives); repeatable delivery (<2 days operator time per Standard tier engagement); back-office portal for client-facing dashboards.
 
 Success metrics: $50-200K USD ARR, 5-10 paying clients, SoverClaw deployed in production for ≥3 client engagements, Trust Layer operational across all engagements.
 
@@ -63,6 +65,8 @@ For Efficient Labs, this implies three operating principles that inform Horizon 
 
 **Principle 3 — Optimize for trust, not technical capability.** Code generation is commoditizing. Trust, brand, and distribution networks are not. Efficient Labs' distribution moat consists of build-in-public credibility, accumulated public engineering artifacts (ADRs, runbooks, audits), the operator's personal brand (NeoTheArchitect), and the discipline visible in the public repo. These compound over time. They cannot be vibed by frontier models. The operator commits to optimizing every business decision for trust accretion: every ADR is an argument for trust, every audit is evidence of trust, every public commit is a deposit toward trust.
 
+**Principle 4 — Build foundational engineering knowledge as discipline, not trend-chase.** What separates a durable AI-native business from latest-repo / latest-tool / latest-MCP noise is foundational engineering knowledge applied with rigor. The disciplines we ground in: AI/ML engineering, computer intelligence, AI intelligence, business intellect, operating systems, RAG retrieval systems, systematic architecture design and development, agentic AI, generative AI, enterprise cloud development. These get researched, gathered, and implemented as foundation — not buzzwords on landing pages, but the actual basis of how the system is built. The fundamentals discipline is what makes the Orchestration Framework (Section 14) compound: every new capability the operator learns lands in the knowledge architecture and becomes available to every future engagement.
+
 These principles do not modify Path D execution sequence. They clarify why Path D is the right shape for the era.
 
 ## Section 5 — Path D — Wedge funds the mission, mission shapes the wedge
@@ -72,6 +76,8 @@ The integrator service ships fast and generates revenue. The platform vision is 
 Every wedge engagement teaches what the platform should become. Composio integrations show what's broken about depending on Composio. n8n delivery shows what's broken about n8n's licensing model. Client interactions are paid market research with a delivery layer.
 
 Discipline rules: commit to path for at least 2 weeks before reassessing; tactical decisions gated by Horizon 1 goals not Horizon 2 or 3 ambitions; vision-machinery (Horizon 2-3 thinking) allowed in evening reflection or strategic sessions, not allowed to drive daily commits; every wedge engagement produces revenue OR public artifact OR platform-direction signal; if an engagement produces none of these, document as a mistake.
+
+The Orchestration Framework (Section 14) is what makes Path D mechanically possible. Wedge engagements teach the platform; the framework captures the teaching as durable knowledge architecture so the next engagement starts from a higher baseline. Without that capture, Path D collapses into per-engagement consulting. With it, every engagement compounds.
 
 ## Section 6 — Operational Tooling Stack
 
@@ -109,15 +115,14 @@ Revisions: First revision included in delivery. Subsequent revisions, monitoring
 
 ## Section 8 — MRR Service Tiers
 
-Wedge engagement = one-time revenue. Optional add-ons = MRR.
+Wedge engagement = one-time revenue. Optional add-ons = MRR. Four named tiers, anchored prices (not ranges) so the public artifact is legible to buyers.
 
-1. Monitoring & uptime alerts: $99-299/mo
-2. Monthly optimization review: $299-499/mo
-3. Compliance & audit pack: $499-999/mo (gated on real compliance work)
-4. Hosted-tier deployment: $499-1499/mo (blocked on n8n Embed license)
-5. Client back-office portal access: $49-99/mo standalone, included with any other MRR tier
+1. **Operator on Call** — $299/mo. Monitoring & uptime alerts on deployed engagement workflows, monthly check-in.
+2. **AI Workforce Manager** — $499/mo. Operator on Call plus monthly optimization review of workflow performance, scoped change requests, and continuous tuning.
+3. **Compliance Concierge** — $999/mo. AI Workforce Manager plus compliance & audit pack — quarterly evidence refresh, regulatory mapping (HIPAA/GDPR/CCPA/SOC 2 as applicable), access review documentation. Gated on real compliance work.
+4. **Sovereign Infrastructure** — $1,499/mo. Compliance Concierge plus hosted-tier deployment under Efficient Labs sovereign substrate (blocked on n8n Embed license; first eligible clients post-Horizon 2).
 
-Back-office portal MVP scope: Astro app, OAuth-via-GitHub or magic-link auth, read-only Postgres views (engagements, workflow logs, audit events), per-client row-level security, Stripe invoice download, support tickets via private GitHub issues. Build after first client live.
+Client back-office portal access: $49-99/mo standalone, included with any tier above. MVP scope: Astro app, OAuth-via-GitHub or magic-link auth, read-only Postgres views (engagements, workflow logs, audit events), per-client row-level security, Stripe invoice download, support tickets via private GitHub issues. Build after first client live.
 
 ## Section 9 — Legal and Compliance Posture
 
@@ -158,7 +163,7 @@ Discipline: Trust Layer is Horizon 2 internal infrastructure. Not a Horizon 1 de
 
 Currently accepted: 0001 (Weft/Paperclip boundary), 0002 (Postgres single-instance), 0003 (n8n licensing), 0004 (commit attribution), 0005 (Tailscale SSH), 0006 (Orchestration Framework as operating methodology — this PR).
 
-Pending Horizon 1: 0007 (client engagement sandboxing protocol), 0008 (PII-redacting bridge architecture), 0009 (client credential handling protocol), 0010 (Composio dependency posture and replacement plan), 0011 (insurance and BAA gating for regulated engagements), 0012 (MRR service tier definitions), 0013 (Trust Layer Horizon 2 architecture, when work begins).
+Pending Horizon 1: 0007 (client engagement sandboxing protocol), 0008 (PII-redacting bridge architecture), 0009 (client credential handling protocol), 0010 (Composio dependency posture and replacement plan), 0011 (insurance and BAA gating for regulated engagements), 0012 (MRR service tier definitions per Section 8 v1.2), 0013 (Trust Layer Horizon 2 architecture, when work begins), 0014 (Security Layer for Foreign Code architecture per Section 15 / Phase K).
 
 Numbering monotonic. Gaps OK. Never renumber.
 
@@ -185,8 +190,34 @@ You shipped real engineering discipline. The public repo proves it. The path for
 
 Do the next thing. Then the next thing. The vision compounds from there.
 
+## Section 14 — The Orchestration Framework as Core IP
+
+The [Orchestration Framework](https://github.com/Neo-The-Architect/The-Orchestration-Framework) is the knowledge architecture under which Efficient Labs operates. It is not a productivity tool, a note-taking system, or an operating manual. It is the structural medium through which the operator's learning compounds across engagements: a senior-level file architecture that captures skills, tools, connectors, repos, agents, and MCPs in canonical form, referenced by Claude Code as foundation. As the operator learns, Claude learns. As Claude learns, the framework compounds. Every wedge engagement that teaches something about the platform vision deposits that teaching into the framework, where the next engagement reads it.
+
+The framework is the core IP. Efficient Labs is the proof point — the demonstration that an operator equipped with the framework can build an AI-native business that compounds rather than churns. The framework is what makes the business replicable, scalable, and ultimately licensable. Without it, Efficient Labs is one operator's working methodology. With it, Efficient Labs is a methodology that operators can adopt, adapt, and extend.
+
+Three-tier IP relationship:
+- **Velocity Framework** (private, on operator's laptop) — the operator's full personal operating doctrine. Source of truth for canonical thinking before public distillation.
+- **The Orchestration Framework** (public, MIT-licensed at github.com/Neo-The-Architect/The-Orchestration-Framework) — the published, generalized methodology. What other operators can read, adapt, and adopt.
+- **Foundation Document** (this file, public in Efficient-Labs repo) — references both as the substrate Efficient Labs operates on top of.
+
+Sovereignty as architectural property emerges naturally from this IP relationship. The framework's "files over memory" principle, agent permissions table, and killswitch primitive collectively produce a system where the operator's data, decisions, and AI infrastructure remain under the operator's control by construction.
+
+## Section 15 — The Security Layer for Foreign Code
+
+Before any external repository, software package, MCP server, Claude Code skill, or third-party connector enters the Efficient Labs substrate, it passes through a verification layer. This is non-negotiable architectural discipline, not optional best practice. The verification layer scans files and code, checks dependency provenance, evaluates declared permissions against required permissions, and verifies safety against the same trust budget every other piece of infrastructure carries.
+
+This layer is distinct from the AI Trust Layer (Section 10). The Trust Layer governs what AI agents do at runtime — pre-execution policy checks, runtime verification, audit log generation. The Security Layer for Foreign Code governs what enters the substrate at adoption time — before code ever has a chance to run.
+
+Both layers exist because frontier AI shifts trust topology: code generation is commoditizing, but trust in code is not. The faster code arrives, the more important the verification gate becomes. An operator who adopts third-party MCPs at the speed of release will eventually adopt one that is hostile or compromised. An operator who runs every adoption through a verification gate may move slightly slower but remains operationally sovereign.
+
+Phase scope: this layer is scheduled as Phase K in the next-phases-scope document, sequenced after Phase J (wedge product MVP) so the wedge ships first while the gate is built. Until Phase K lands, foreign-code adoption is constrained to a small allowlist (currently: components already adopted or in flight as of Foundation v1.2, plus components vetted manually by the operator with audit trail). New adoption beyond the allowlist is blocked until the gate is operational.
+
+The infinite production pipeline principle: everything that can be automated will be, over time. Systems compound rather than being replaced quarterly. The verification gate is part of that pipeline — once built, every future foreign-code adoption uses it. The operator does not re-decide whether to verify; the operator decides only whether the verification result clears the bar.
+
 ---
 
 **See also:**
-- [The Orchestration Framework](https://github.com/Neo-The-Architect/The-Orchestration-Framework) — the operating methodology Efficient Labs operates within
+- [The Orchestration Framework](https://github.com/Neo-The-Architect/The-Orchestration-Framework) — the core IP and knowledge architecture Efficient Labs operates within (Section 14)
 - [ADR 0006](../adr/0006-orchestration-framework-as-operating-methodology.md) — formal decision establishing the framework relationship
+- [Next Phases Scope](../planning/next-phases-scope.md) — Phase K introduces the Security Layer for Foreign Code (Section 15)
