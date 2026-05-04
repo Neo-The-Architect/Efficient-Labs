@@ -47,6 +47,24 @@ If your issue does not match any template, the bug report template is the best d
 5. **Open the PR.** The repo's [pull request template](.github/PULL_REQUEST_TEMPLATE.md) walks through the discipline-check sections. Every section matters; "N/A" is acceptable when a section genuinely does not apply.
 6. **Respond to review.** The operator may approve, request changes, or request changes plus a revised approach. Treat review feedback as information, not as judgment — the goal is to land the right change, and the operator's review is the path to figuring out what that is.
 
+## Anonymization protocol for public artifacts
+
+The operator maintains a private brand exclusion list — the names of business entities, projects, and identities that the operator considers private context, never to be associated with this public repository. The list itself lives privately in the operator's vault and is never published.
+
+This protocol governs how that boundary is enforced in everyday contribution work.
+
+All public-facing content in this repository and in any linked public repositories — including PR bodies, commit messages, issue bodies, file contents, ADR text, runbook text, README content, and CHANGELOG entries — must never reference the operator's canonical private-brand exclusion list explicitly. Listing the strings in a verification note defeats the purpose of the verification.
+
+Verification language for anonymization grep checks must use this exact phrasing, in PR bodies and commit messages alike:
+
+> Anonymization grep clean — verified zero matches against canonical private-brand exclusion list at commit time. Operator maintains the canonical list privately.
+
+The grep command itself is run privately on the operator's machine or in ephemeral CI logs that are not committed to a public branch. The grep's pattern argument and any output that includes the matched strings are never echoed into committed content. The verification statement above is the only acceptable public artifact of the check.
+
+Failure to follow this protocol requires force-push correction of the affected commit (if the leak is on a feature branch and the branch has not yet merged) or close-and-reopen of the affected pull request from a clean branch (preferred when the residual exposure window matters more than preserving the existing PR number). For leaks on `main`, treat the incident as a real disclosure event: capture in the postmortem template, escalate to the operator immediately, and prefer a corrective commit with an honest CHANGELOG note over silent rewrites of public history.
+
+This protocol is also published as an architectural primitive in [The Orchestration Framework](https://github.com/Neo-The-Architect/The-Orchestration-Framework) so that other operators maintaining public-plus-private artifact boundaries can adopt the same discipline.
+
 ## What kinds of contribution are most welcome
 
 - **Documentation corrections.** Typos, broken links, factual errors in runbooks or ADRs, clarifications where the prose is ambiguous. These are the highest-leverage contributions for a public-build repo.

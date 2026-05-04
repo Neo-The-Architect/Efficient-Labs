@@ -62,6 +62,10 @@ The repo is a public artifact and the operator wants the security disclosure pro
 
 The "TBD email" placeholder is itself an honest signal: the policy is real, the GitHub channel is fully operational, and the email channel is on a known finite list of things to provision before the first paying client. That is preferable to fabricating an email that goes nowhere.
 
+## Related: operational discipline against unintentional disclosure
+
+Vulnerability disclosure is one half of the disclosure surface this document governs. The other half is operational discipline: the day-to-day rules that prevent the operator's private context from leaking into public artifacts through ordinary contribution work. The anonymization protocol — including the locked verification language for anonymization grep checks and the close-and-reopen procedure for force-push correction — is documented under [`CONTRIBUTING.md`](CONTRIBUTING.md). It is referenced here so that anyone evaluating the security posture of this repository sees both halves of the disclosure surface in one map.
+
 ## Updates
 
 This document is versioned through git like every other artifact in the repo. Material changes (the addition of an email address, a change to response times, a change to scope) land through PRs reviewed by the operator. Stylistic edits and link updates may land without ceremony.
