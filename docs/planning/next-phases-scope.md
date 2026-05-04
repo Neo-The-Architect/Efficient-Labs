@@ -10,7 +10,7 @@
 
 Phases A-D shipped the engineering discipline scaffold. The Phase D audit (`docs/audit/2026-04-28-infrastructure-state-audit.md`) identified the work that remains to bring the infrastructure to deployable state for first paying client. Foundation Document v1.1 (`docs/vision/efficient-labs-foundation.md`) established Path D — wedge funds the mission, mission shapes the wedge.
 
-This document scopes the next 6 phases (E through J) as bulk-completable work blocks, sequenced for shipping discipline. Phases are ordered by dependency, not by ideal sequence — early phases unblock later phases.
+This document scopes the next 7 phases (E through K) as bulk-completable work blocks, sequenced for shipping discipline. Phases are ordered by dependency, not by ideal sequence — early phases unblock later phases. Phase K (Security Layer for Foreign Code) was added in the v1.2 Foundation Document amendment and is sequenced after Phase J per Foundation Document Section 15.
 
 ## Phase index
 
@@ -22,8 +22,9 @@ This document scopes the next 6 phases (E through J) as bulk-completable work bl
 | H | Restate hardening | 1 day | Restate version pin, config validation, template flow fix, OnFailure alert wiring |
 | I | Weft/Paperclip runbook DRAFT | 2-3 days | `infra/runbooks/install-weft-and-paperclip.md` brought to DRAFT-ready |
 | J | Wedge product MVP scaffolding | 3-5 days | Lead intake → qualification → Stripe → n8n delivery flow |
+| K | Security Layer for Foreign Code | 3-4 days | ADR 0014, `infra/runbooks/foreign-code-verification-gate.md`, `docs/security/foreign-code-allowlist.md` |
 
-Total estimated work: 10-16 working days. Phases E and J are parallel-eligible (do not block each other and serve different concerns).
+Total estimated work: 13-20 working days. Phases E and J are parallel-eligible. Phase K sequences after J.
 
 ---
 
@@ -324,6 +325,66 @@ Foundation Document v1.1 success metrics for Horizon 1 are "$5-15K USD revenue" 
 
 ---
 
+## Phase K — Security Layer for Foreign Code
+
+### Purpose
+
+Establish the verification gate for foreign-code adoption per Foundation Document v1.2 Section 15. Before any external repository, software package, MCP server, Claude Code skill, or third-party connector enters the Efficient Labs substrate, it passes through this gate. Non-negotiable architectural discipline.
+
+This phase is sequenced **after Phase J** so the wedge product MVP ships first. The trade-off: between J shipping and K landing, foreign-code adoption is constrained to an allowlist (components already adopted as of Foundation v1.2, plus components manually vetted by the operator with audit trail). New adoption beyond the allowlist is blocked until K is operational.
+
+### Strategic justification
+
+Frontier AI accelerates code generation. Adoption-rate of third-party MCPs and skills will outpace any operator's capacity to manually verify safety. The verification gate is the structural answer: instead of re-deciding per adoption, the operator decides once on the gate's policy and applies it uniformly. Aligns with Foundation Document Section 4.5 Principle 3 ("optimize for trust, not technical capability") and the infinite production pipeline principle from Section 15.
+
+### Work blocks
+
+**Block K.1 — ADR 0014 Security Layer architecture** (1 day)
+
+- Decision: gate's scope (what code categories pass through), policy framework (signature checks, dependency provenance, declared-vs-required permissions), failure modes (what happens when gate flags a component), and operator override path (with audit trail).
+- Reference: existing ADR 0006 (Orchestration Framework methodology), Foundation Document Section 15.
+
+**Block K.2 — Gate implementation runbook** (2-3 days)
+
+- `infra/runbooks/foreign-code-verification-gate.md`
+- Stages: intake (declared component metadata), static scan (file/code), dependency provenance check, permission diff against declared scope, sandbox execution (where applicable), signed verdict artifact.
+- Tooling: open-source scanning tools (semgrep, trivy, or equivalent) layered with Claude-driven semantic checks via existing Orchestration Framework patterns.
+- Verdict artifact persisted to vault under `02-decisions/foreign-code-verifications/`.
+
+**Block K.3 — Allowlist documentation** (0.5 day)
+
+- Initial allowlist enumerated under `docs/security/foreign-code-allowlist.md`: components currently adopted (Restate, Weft, Paperclip, Composio, n8n, etc.) marked as grandfathered.
+- New additions require K.2 verdict before allowlist append.
+
+**Block K.4 — Migration of grandfathered components** (deferred, Horizon 2)
+
+- Run grandfathered components through the gate retroactively as Horizon 2 work. Not a Horizon 1 blocker.
+
+### Acceptance criteria
+
+- ADR 0014 accepted
+- Runbook produces a verdict artifact for at least one synthetic test case (a known-good component and a known-bad component, both run end-to-end)
+- Allowlist document committed
+- Foundation Document Section 15 cross-reference verified
+
+### Dependencies
+
+- Phase J ships (so substrate is in revenue-generating state before gate work absorbs operator time)
+- ADR template (`docs/adr/_template.md`) exists
+
+### Out of scope for Phase K
+
+- Real-time / runtime enforcement (that is the AI Trust Layer, Foundation Section 10, Horizon 2)
+- Productization of the gate (Horizon 3 candidate, alongside Trust Layer per Section 10's HashiCorp pattern)
+- Backporting verification verdicts to all currently-grandfathered components (deferred to Horizon 2 per K.4)
+
+### Stop conditions
+
+- If K.1 ADR reveals that gate scope cannot be cleanly defined without first picking specific tooling, stop and pick tooling first (move scanning-tool selection into K.1).
+- If K.2 runbook reveals that gate latency makes adoption practically blocked (e.g., gate takes 4+ hours per component), reassess: either accept the latency as the cost of safety, or scope down K.2 to fast-path categories with manual override for the rest.
+
+---
+
 ## Cross-phase considerations
 
 ### Phase parallelization map
@@ -337,9 +398,10 @@ Foundation Document v1.1 success metrics for Horizon 1 are "$5-15K USD revenue" 
                  └──>[H: Restate hardening]───┘
 
 [J: Wedge product] runs parallel to all above
+[K: Foreign-code gate] sequences after J
 ```
 
-Phase J does not block on E-I. Operator can ship first paying client with current substrate plus J, then harden via E-I in parallel or after.
+Phase J does not block on E-I. Operator can ship first paying client with current substrate plus J, then harden via E-I in parallel or after. Phase K must follow J — gate ships once wedge revenue is in motion.
 
 ### Stop conditions (per phase)
 
@@ -351,12 +413,13 @@ Each phase has explicit stop-and-reassess triggers:
 - **Phase H:** if Restate version pin reveals incompatibility with current runbook, stop and reassess Restate adoption (does the architecture survive a different durable executor?).
 - **Phase I:** if wire-up testing fails repeatedly, stop and consider whether Weft is the right substrate vs alternatives.
 - **Phase J:** if first lead intake test reveals fundamental flow breakage, stop and reassess wedge product shape before continuing scaffolding.
+- **Phase K:** if K.1 ADR reveals gate scope cannot be cleanly defined without picking tooling first, stop and pick tooling first; if K.2 latency makes adoption practically blocked, reassess scope to fast-path categories with manual override for the rest.
 
 ### Acceptance criteria for the scope as a whole
 
 This document (`docs/planning/next-phases-scope.md`) is considered fulfilled when:
 
-- All 6 phases (E-J) reach acceptance criteria as defined per phase
+- All 7 phases (E-K) reach acceptance criteria as defined per phase
 - Audit document `docs/audit/2026-04-28-infrastructure-state-audit.md` has all 21 actionable items closed (with the explicit out-of-scope items remaining out of scope)
 - Foundation Document v1.1 Horizon 1 success metrics are met ($5-15K revenue, 1-3 case studies, Lynis ≥ 90)
 
