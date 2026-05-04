@@ -1,0 +1,74 @@
+# Restate systemd service unit — canonical template
+#
+# This file is the canonical source of truth for the Restate systemd unit.
+# The deploy flow is:
+#
+#     sudo install -o root -g root -m 0644 \
+#         infra/systemd/restate.service.template \
+#         /etc/systemd/system/restate.service
+#
+# Do NOT edit /etc/systemd/system/restate.service in place on the host. Edits
+# diverge from this template silently. If a change is needed, edit this file,
+# commit, redeploy.
+#
+# Canonical reference: infra/runbooks/install-restate.md, "Materialize the
+# systemd unit" step. Audit item 26.
+#
+# Placeholders the operator must fill in before enabling the corresponding
+# behavior:
+#   <ALERT_SERVICE_UNIT> — the systemd unit name for the operator's chosen
+#                          alert path (Discord webhook, email, SMS, etc.).
+#                          Only required if OnFailure= is uncommented.
+#                          Wire as: OnFailure=<ALERT_SERVICE_UNIT>.service
+#
+# Everything else in this template uses the canonical defaults documented in
+# the runbook (user/group restate, binary path /usr/local/bin/restate-server,
+# config path /etc/restate/restate.toml, data path /var/lib/restate, log path
+# /var/log/restate). Operators forking this repo who deviate from those
+# defaults must update both this template and the runbook in the same PR.
+
+[Unit]
+Description=Restate durable executor (Weft substrate)
+Documentation=https://docs.restate.dev/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=restate
+Group=restate
+ExecStart=/usr/local/bin/restate-server --config-file /etc/restate/restate.toml
+
+# Logs to journald — accessible via `journalctl -u restate`.
+StandardOutput=journal
+StandardError=journal
+
+# Restart-on-failure with bounded backoff. The architecture demands restart
+# behavior — Restate down means Weft executions stall.
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=10
+
+# OnFailure hook fires after the StartLimit window is exhausted. Wire this
+# to whatever the operator alert path is (Discord webhook unit, email, etc.).
+# OnFailure=<ALERT_SERVICE_UNIT>.service
+
+# Sandboxing: read-only system, write-only into the data and log dirs.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadWritePaths=/var/lib/restate /var/log/restate
+LockPersonality=true
+
+# Environment overrides go here if needed (env file lives outside repo).
+# EnvironmentFile=-/etc/restate/restate.env
+
+[Install]
+WantedBy=multi-user.target
