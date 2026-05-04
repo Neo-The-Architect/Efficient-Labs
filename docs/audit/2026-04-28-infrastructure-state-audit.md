@@ -34,6 +34,7 @@ The architecture report shows minor staleness in prescriptive ADR numbering (Sec
    - Current: `openssl rand -base64 32` produces 43-char base64 strings containing `/`, `+`, `=`. The Secrets section then writes these into `DATABASE_URL=postgres://paperclip:${PAPERCLIP_PG_PASSWORD}@127.0.0.1:5432/paperclip` (line 351). Postgres' libpq URL parser does not natively decode unencoded `/` or `+` in the password segment; deployments will fail or silently use the wrong password.
    - Fix: change to `openssl rand -hex 32` (64 hex chars, URL-safe), or pipe through `tr -d '/+='` and document the slight entropy reduction, or document URL-encoding explicitly as a deploy-time step. Recommended: switch to `-hex 32`.
    - Effort: 5 minutes. One-line edit plus a comment explaining why hex.
+   - Closed: PR #9 (commit `c84b92e`), merged 2026-04-29.
 
 2. **Hardened-baseline prerequisite is undocumented (cross-cutting).**
    - File: `infra/runbooks/install-postgres.md`, line 21 ("Hardened baseline already in place — Lynis ≥ 85, Tailscale-only ingress, no public TCP except those exposed deliberately via Funnel").
@@ -49,30 +50,35 @@ The architecture report shows minor staleness in prescriptive ADR numbering (Sec
    - Current: `sudo apt install -y curl ca-certificates gnupg lsb-release` runs without a preceding `sudo apt update`. On a freshly cloud-init'd Ubuntu 24.04 image this typically works (cloud-init refreshed the cache during boot), but on an arbitrary 24.04 host with stale cache the install may fail or pick the wrong package version.
    - Fix: prepend `sudo apt update &&` to line 35.
    - Effort: <5 minutes.
+   - Closed: PR #12 (commit `f979e62`), merged 2026-05-01.
 
 4. **`gnupg` package installed but unused.**
    - File: `infra/runbooks/install-postgres.md`, line 35.
    - The signed-by approach uses the `.asc` armored key file directly. There is no `gpg --dearmor` step, so `gnupg` is not needed.
    - Fix: remove `gnupg` from the apt install line.
    - Effort: <5 minutes.
+   - Closed: PR #12 (commit `f979e62`), merged 2026-05-01.
 
 5. **Backup script provenance for `/tmp/postgres-backup.sh` is implicit.**
    - File: `infra/runbooks/install-postgres.md`, lines 207–231.
    - The script body is shown in a code block, then `sudo install -m 0750 -o root -g postgres /tmp/postgres-backup.sh /usr/local/bin/postgres-backup.sh` is run — but the runbook does not explicitly say to write the code block's contents to `/tmp/postgres-backup.sh` first. A literal-following operator would hit "no such file or directory."
    - Fix: prepend a step that uses a heredoc to write the script to `/tmp/postgres-backup.sh`, or instruct the operator to commit the script under `infra/scripts/postgres-backup.sh` and `install` from the checked-out repo path.
    - Effort: 10 minutes.
+   - Closed: PR #12 (commit `f979e62`), merged 2026-05-01.
 
 6. **Backup systemd unit runs as root, then `sudo`s to postgres internally.**
    - File: `infra/runbooks/install-postgres.md`, lines 234–245.
    - The unit has no `User=` directive, so it runs as root. The script then `sudo -u postgres pg_dump ...`. Cleaner: set `User=postgres` in the unit and drop the `sudo` from the script. Less privilege at the systemd boundary.
    - Fix: add `User=postgres` and `Group=postgres` to the `[Service]` section; drop `sudo -u postgres` from the script.
    - Effort: 10 minutes plus re-test.
+   - Closed: PR #12 (commit `f979e62`), merged 2026-05-01.
 
 7. **Cross-runtime memory budget mismatch with Restate runbook prereq.**
    - File: `infra/runbooks/install-postgres.md`, line 22 (≥ 2 GB RAM) vs. `infra/runbooks/install-restate.md`, line 39 (≥ 4 GB total when both runtimes coexist).
    - The Postgres runbook's standalone 2 GB minimum is correct *for Postgres alone* but the operator following it for the EL VPS (which will host Postgres + Restate + Weft + Paperclip) needs the stricter total. The Restate runbook calls this out; the Postgres runbook does not back-reference.
    - Fix: add a line in the Postgres prereq section: "On the EL VPS (which co-hosts Restate, Weft, Paperclip), see `install-restate.md` for the full-stack RAM minimum (≥ 4 GB)."
    - Effort: 5 minutes.
+   - Closed: PR #12 (commit `f979e62`), merged 2026-05-01.
 
 8. **`pg_hba.conf` `peer` line for `paperclip-in-Docker` is documented but architecture decision is deferred.**
    - File: `infra/runbooks/install-postgres.md`, lines 358 (Concerns).
@@ -111,6 +117,7 @@ The architecture report shows minor staleness in prescriptive ADR numbering (Sec
     - Additionally: `infra/systemd/` is empty in the repo today (verified). The template should live in the repo first and be deployed *to* the VPS, not copied *from* the VPS to a workstation.
     - Fix: invert the flow — author `infra/systemd/restate.service.template` in the repo, then in the runbook step 5 say `sudo install -m 0644 -o root -g root <repo-checkout>/infra/systemd/restate.service.template /etc/systemd/system/restate.service`.
     - Effort: 15 minutes for the runbook edit; pairs with item 13.
+    - Closed: PR #19 (commit `ae67dbd`), merged 2026-05-04.
 
 13. **`OnFailure=` alert path is commented out — architecture demands it be live.**
     - File: `infra/runbooks/install-restate.md`, lines 170–172.
@@ -135,6 +142,7 @@ The architecture report shows minor staleness in prescriptive ADR numbering (Sec
     - `sudo tailscale serve --bg --https=9070 http://127.0.0.1:9070` looks plausible but Tailscale Serve's CLI has gone through revisions. Worth validating against the current `tailscale --version` on the VPS.
     - Fix: validate at deploy time; capture exact invocation.
     - Effort: 5 minutes at deploy time.
+    - Closed: PR #21 (commit `a588c6d`), merged 2026-05-04.
 
 ## Findings — Artifact 3: `infra/runbooks/install-weft-and-paperclip.md`
 
@@ -223,6 +231,7 @@ The architecture report shows minor staleness in prescriptive ADR numbering (Sec
     - Weft/Paperclip runbook (item 18) names `infra/systemd/weft.service.template` and `infra/systemd/paperclip.service.template`; both missing.
     - Recommended fix: commit at least the Restate template now (the unit body is in the runbook); commit Weft and Paperclip templates as part of bringing that runbook to DRAFT-ready.
     - Effort: 30 minutes for Restate template.
+    - Closed: PR #17 (commit `1af9054`), merged 2026-05-04.
 
 ## Summary recommendations — fixes needed before deploy
 
