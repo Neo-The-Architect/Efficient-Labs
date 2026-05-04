@@ -183,6 +183,15 @@ If status shows anything other than `active (running)` and the journal does not 
 
 The admin API is loopback-only. Operator access is via Tailscale Serve, **never Tailscale Funnel** — Funnel exposes to the public internet, which is not what we want for the admin surface.
 
+**Deploy-time verification first.** The Tailscale Serve CLI has gone through revisions across releases; the invocation below is the most-likely-correct form as of the runbook's commit date but specific flag names and subcommand placement may have shifted. Before running it, capture the installed version and confirm the flag form against the live help output:
+
+```bash
+tailscale --version                              # capture in operator deploy log
+tailscale serve --help 2>&1 | head -40           # confirm --bg and --https=<port> exist on this version
+```
+
+Then run the canonical invocation:
+
 ```bash
 # Run as the user/scope that owns the Tailscale node.
 sudo tailscale serve --bg --https=9070 http://127.0.0.1:9070
@@ -192,6 +201,8 @@ sudo tailscale serve --bg --https=9070 http://127.0.0.1:9070
 #   curl https://<vps-tailscale-name>.tailnet.ts.net:9070/...
 # (Substitute the tailnet hostname for your tailnet.)
 ```
+
+If the canonical invocation errors — flags renamed, deprecated, or moved between subcommands — find the working form via `tailscale serve --help`, `tailscale serve status`, or the [Tailscale Serve docs](https://tailscale.com/kb/1242/tailscale-serve). Run the working form, capture it in the operator deploy log, and file a runbook-fix issue against this repo so the next operator (or future-self) does not hit the same drift.
 
 Document the exact Tailscale Serve mapping in your operator's tailnet notes — Tailscale's ACL state is not version-controlled here on purpose.
 
