@@ -139,65 +139,30 @@ Schema drift across Restate versions is a real risk (see `## Concerns`). Validat
 
 If a key in the config file is unknown to the binary, Restate either logs a warning and ignores it (older versions) or refuses to start (newer versions). Either way, you find out at step 6.
 
-### 5. Materialize the systemd unit
+### 5. Materialize the systemd unit from `infra/systemd/restate.service.template`
 
-Write `/etc/systemd/system/restate.service`:
+The canonical Restate systemd unit lives in this repo at [`infra/systemd/restate.service.template`](../systemd/restate.service.template). It is a deploy-ready unit: sandboxed (`ProtectSystem=strict`, `NoNewPrivileges`, constrained `ReadWritePaths`), journald logging, restart-on-failure with bounded backoff, run as `restate:restate`, exec'ing `/usr/local/bin/restate-server --config-file /etc/restate/restate.toml`. The runbook does not duplicate the unit body — read the template if you want every directive in full. The runbook is canonical for *how* the unit is deployed; the template is canonical for *what* the unit is.
 
-```ini
-[Unit]
-Description=Restate durable executor (Weft substrate)
-Documentation=https://docs.restate.dev/
-After=network-online.target
-Wants=network-online.target
+Before installing, decide on OnFailure alert wiring. The template ships with the `OnFailure=` line commented out. If you want failures to page an alert path (Discord webhook unit, email-relay unit, etc.), edit the template's `# OnFailure=<ALERT_SERVICE_UNIT>.service` line — replace `<ALERT_SERVICE_UNIT>` with your alert service unit's name and uncomment. Commit the change before installing; the install step copies whatever is committed.
 
-[Service]
-Type=simple
-User=restate
-Group=restate
-ExecStart=/usr/local/bin/restate-server --config-file /etc/restate/restate.toml
-
-# Logs to journald — accessible via `journalctl -u restate`.
-StandardOutput=journal
-StandardError=journal
-
-# Restart-on-failure with bounded backoff. The architecture demands restart
-# behavior — Restate down means Weft executions stall.
-Restart=always
-RestartSec=5
-StartLimitIntervalSec=60
-StartLimitBurst=10
-
-# OnFailure hook fires after the StartLimit window is exhausted. Wire this
-# to whatever the operator alert path is (Discord webhook unit, email, etc.).
-# OnFailure=restate-failure-alert.service
-
-# Sandboxing: read-only system, write-only into the data and log dirs.
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
-PrivateTmp=true
-PrivateDevices=true
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectControlGroups=true
-RestrictSUIDSGID=true
-ReadWritePaths=/var/lib/restate /var/log/restate
-LockPersonality=true
-
-# Environment overrides go here if needed (env file lives outside repo).
-# EnvironmentFile=-/etc/restate/restate.env
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Mirror this unit into `infra/systemd/restate.service.template` so the artifact lives in the repo:
+Install the template into systemd. Run from the repo root:
 
 ```bash
-sudo cp /etc/systemd/system/restate.service \
-    /home/<OPERATOR>/workspace/efficient-labs/infra/systemd/restate.service.template
-# Then commit the template (no secrets in it).
+sudo install -o root -g root -m 0644 \
+    infra/systemd/restate.service.template \
+    /etc/systemd/system/restate.service
 ```
+
+The `install` form (rather than `cp`) is deliberate — it sets the canonical owner, group, and mode in one call.
+
+Verify the deployed unit matches the template byte-for-byte:
+
+```bash
+sudo diff infra/systemd/restate.service.template /etc/systemd/system/restate.service
+# expect: no output (files identical)
+```
+
+**Discipline:** any subsequent edit to the unit happens in the template, gets committed, then redeployed via the same `install` command above. Never edit `/etc/systemd/system/restate.service` directly on the host — host-side edits diverge silently from the committed template, and the next redeploy overwrites them without warning.
 
 ### 6. Enable and start Restate
 
