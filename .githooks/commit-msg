@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Verification-language gate for public-repo commits.
+#
+# Per Foundation Document v1.2 anonymization protocol: every public-repo commit
+# message must contain the locked verification line. The exact wording is mandated
+# so that public commits carry uniform attestation that the anonymization grep
+# was run, without exposing the operator's canonical exclusion list.
+#
+# To bypass for non-content commits (merges, reverts), set:
+#   ANONYMIZATION_VERIFY_SKIP=1 git commit ...
+# Use sparingly; the audit trail benefits from uniform attestation.
+
+set -euo pipefail
+
+MSG_FILE="$1"
+LOCKED_LINE='Anonymization grep clean — verified zero matches against canonical private-brand exclusion list at commit time. Operator maintains the canonical list privately.'
+
+err() { printf '\033[31m%s\033[0m\n' "$*" >&2; }
+
+# Skip merge commits, reverts, and fixups — they inherit attestation from the
+# commits they reference.
+first_line=$(head -n 1 "$MSG_FILE")
+case "$first_line" in
+  Merge\ *|Revert\ *|fixup!*|squash!*) exit 0 ;;
+esac
+
+if [[ "${ANONYMIZATION_VERIFY_SKIP:-0}" == "1" ]]; then
+  exit 0
+fi
+
+if ! grep -qF -- "$LOCKED_LINE" "$MSG_FILE"; then
+  err "anonymization gate: commit message missing verification line"
+  err ""
+  err "  required line (exact wording, including em-dash):"
+  err "  $LOCKED_LINE"
+  err ""
+  err "  append it to your commit message and retry"
+  exit 1
+fi
+
+exit 0

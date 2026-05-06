@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Anonymization gate for public-repo commits.
+#
+# Reads a denylist of canonical private-brand strings (one per line, # for
+# comments) from $DENYLIST_PATH (default /home/neo/vault/anonymization-denylist.txt)
+# and refuses any commit whose staged diff matches any of those strings.
+#
+# Fails closed: if the denylist is unreadable, the commit is blocked.
+#
+# To set up read access for the claude user against an operator-private denylist:
+#   sudo setfacl -m u:claude:--x /home/neo
+#   sudo setfacl -m u:claude:--x /home/neo/vault
+#   sudo setfacl -m u:claude:r-- /home/neo/vault/anonymization-denylist.txt
+#
+# To override the denylist path (e.g. for local testing):
+#   DENYLIST_PATH=/tmp/mock-denylist.txt git commit ...
+
+set -euo pipefail
+
+DENYLIST_PATH="${DENYLIST_PATH:-/home/neo/vault/anonymization-denylist.txt}"
+
+err() { printf '\033[31m%s\033[0m\n' "$*" >&2; }
+info() { printf '%s\n' "$*" >&2; }
+
+if [[ ! -r "$DENYLIST_PATH" ]]; then
+  err "anonymization gate: denylist not readable at $DENYLIST_PATH"
+  err "  - file may not exist yet, or current user lacks read access"
+  err "  - if operator-private vault file: see header of this script for setfacl commands"
+  err "  - to override path for local testing: DENYLIST_PATH=/path/to/denylist git commit ..."
+  exit 1
+fi
+
+# Build pattern list from denylist: skip blanks and # comments, trim trailing whitespace.
+mapfile -t PATTERNS < <(
+  sed -E 's/[[:space:]]+$//' "$DENYLIST_PATH" \
+    | grep -Ev '^[[:space:]]*$|^[[:space:]]*#'
+)
+
+if [[ ${#PATTERNS[@]} -eq 0 ]]; then
+  info "anonymization gate: denylist is empty (no patterns to enforce); allowing commit"
+  exit 0
+fi
+
+# Collect staged files. Skip deletions, binary blobs are still scanned via diff.
+mapfile -t STAGED < <(git diff --cached --name-only --diff-filter=ACMRT)
+
+if [[ ${#STAGED[@]} -eq 0 ]]; then
+  exit 0
+fi
+
+violations=0
+report=()
+
+# Scan the staged diff (added lines only) against each pattern.
+# Using --cached --no-color and processing per-file gives clean reporting.
+for f in "${STAGED[@]}"; do
+  # Skip the denylist itself in case it ever lands inside the repo by accident.
+  [[ "$f" == ".githooks/"* ]] && continue
+  # Pull the staged version of the file; ignore if missing (e.g. submodule).
+  staged_blob=$(git show ":$f" 2>/dev/null) || continue
+  for pattern in "${PATTERNS[@]}"; do
+    # Fixed-string, case-insensitive match. Avoids regex foot-guns in operator-edited list.
+    if matches=$(printf '%s' "$staged_blob" | grep -nFi -- "$pattern" 2>/dev/null); then
+      while IFS= read -r line; do
+        report+=("$f: $line")
+        violations=$((violations + 1))
+      done <<< "$matches"
+    fi
+  done
+done
+
+if [[ $violations -gt 0 ]]; then
+  err "anonymization gate: BLOCKED — $violations match(es) against denylist"
+  err ""
+  for r in "${report[@]}"; do
+    err "  $r"
+  done
+  err ""
+  err "  remove the offending content or move it to a private repo before committing"
+  exit 1
+fi
+
+info "anonymization gate: clean ($(wc -l < "$DENYLIST_PATH") denylist entries scanned across ${#STAGED[@]} staged file(s))"
+exit 0
