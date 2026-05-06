@@ -1,0 +1,22 @@
+# pre-commit framework configuration. Wraps the native scripts in .githooks/
+# so the same scanning logic runs whether contributors use `pre-commit install`
+# or `git config core.hooksPath .githooks`.
+#
+# To activate after `pip install pre-commit`:
+#   pre-commit install --hook-type pre-commit --hook-type commit-msg
+
+repos:
+  - repo: local
+    hooks:
+      - id: anonymization-grep
+        name: anonymization gate (denylist scan)
+        entry: .githooks/pre-commit
+        language: script
+        stages: [pre-commit]
+        pass_filenames: false
+        always_run: true
+      - id: anonymization-verification-line
+        name: anonymization gate (verification line)
+        entry: .githooks/commit-msg
+        language: script
+        stages: [commit-msg]
