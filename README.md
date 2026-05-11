@@ -14,9 +14,15 @@ The canonical design document for the whole system lives at [`docs/architecture/
 
 ## Operating Methodology
 
-Efficient Labs operates within [The Orchestration Framework](https://github.com/Neo-The-Architect/The-Orchestration-Framework) — a public methodology that defines how a single human operator commands an agentic stack of AI tools through structured files. The framework specifies philosophical foundations, vault file architecture, agentic stack roles, operating rhythms, trigger words, and recurring failure modes.
+Efficient Labs operates within [The Orchestration Framework](https://github.com/Neo-The-Architect/Orchestral) — a public methodology that defines how a single human operator commands an agentic stack of AI tools through structured files. The framework specifies philosophical foundations, vault file architecture, agentic stack roles, operating rhythms, trigger words, and recurring failure modes.
 
 The engineering discipline visible in this repo (Architecture Decision Records, runbooks, infrastructure audits, public commit attribution to AI agents) instantiates the framework. The methodology evolves independently at its own repo and may be adopted by other operators.
+
+Efficient Labs applies the Orchestral methodology to client engagements. Three-repo architecture:
+
+- **Solo-AI** (private) — Sovereign Orchestration Layer Ontology
+- **Orchestral** (public) — Open methodology
+- **Efficient-Labs** (this repo, public) — Commercial trust layer
 
 See [ADR 0006](docs/adr/0006-orchestration-framework-as-operating-methodology.md) for the formal decision establishing this relationship.
 
