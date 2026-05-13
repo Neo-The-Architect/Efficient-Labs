@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Waitlist | Efficient Labs">
+  <section class="page-hero narrow">
+    <h1>You are early. We launch July 2026.</h1>
+    <p>Join the waitlist for priority booking and launch-week updates. The live form backend is intentionally disabled until the waitlist storage gate clears.</p>
+  </section>
+  <section class="section form-section">
+    <form class="panel" aria-describedby="waitlist-status">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" placeholder="you@example.com" disabled />
+      <button type="button" disabled>Waitlist opens soon</button>
+      <p id="waitlist-status">Backend pending: Cloudflare Worker plus canonical storage decision.</p>
+    </form>
+  </section>
+</BaseLayout>

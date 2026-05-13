@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" role="img" aria-labelledby="title desc">
+  <title id="title">Governed AI infrastructure map</title>
+  <desc id="desc">A product diagram showing operator governance connected to agent execution, evidence, and client infrastructure.</desc>
+  <rect width="720" height="520" rx="28" fill="#0e1412"/>
+  <g fill="none" stroke="#8fc5aa" stroke-width="2" opacity="0.35">
+    <path d="M140 140h440v260H140z"/>
+    <path d="M360 82v356M92 270h536"/>
+    <path d="M170 170l380 200M550 170L170 370"/>
+  </g>
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="246" y="44" width="228" height="76" rx="16" fill="#f5f2ea"/>
+    <text x="360" y="76" text-anchor="middle" font-size="18" font-weight="700" fill="#0e1412">Operator Gate</text>
+    <text x="360" y="100" text-anchor="middle" font-size="13" fill="#536057">Approve risk, spend, launch</text>
+    <rect x="54" y="222" width="200" height="96" rx="16" fill="#17211d" stroke="#31463b"/>
+    <text x="154" y="260" text-anchor="middle" font-size="18" font-weight="700" fill="#f5f2ea">Agents</text>
+    <text x="154" y="286" text-anchor="middle" font-size="13" fill="#b6c5ba">Claude + Codex + Gemini</text>
+    <rect x="466" y="222" width="200" height="96" rx="16" fill="#17211d" stroke="#31463b"/>
+    <text x="566" y="260" text-anchor="middle" font-size="18" font-weight="700" fill="#f5f2ea">Evidence</text>
+    <text x="566" y="286" text-anchor="middle" font-size="13" fill="#b6c5ba">ADRs, runbooks, reviews</text>
+    <rect x="246" y="400" width="228" height="76" rx="16" fill="#22352d" stroke="#8fc5aa"/>
+    <text x="360" y="432" text-anchor="middle" font-size="18" font-weight="700" fill="#f5f2ea">Client Substrate</text>
+    <text x="360" y="456" text-anchor="middle" font-size="13" fill="#b6c5ba">Owned systems, private data</text>
+  </g>
+</svg>
