@@ -1,0 +1,45 @@
+---
+import '../styles/global.css';
+
+const {
+  title = 'Efficient Labs',
+  description = 'Governed AI infrastructure for operators who refuse chaos.'
+} = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Efficient Labs home">
+        <span class="brand-mark" aria-hidden="true">EL</span>
+        <span>Efficient Labs</span>
+      </a>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="/audit/">Audit</a>
+        <a href="/methodology/">Methodology</a>
+        <a class="nav-cta" href="/waitlist/">Waitlist</a>
+      </nav>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div>
+        <strong>Efficient Labs</strong>
+        <p>Built in public. Client data private. Launching July 2026.</p>
+      </div>
+      <nav aria-label="Footer navigation">
+        <a href="https://github.com/Neo-The-Architect/Efficient-Labs">GitHub</a>
+        <a href="https://github.com/Neo-The-Architect/Orchestral">Orchestral</a>
+        <a href="/waitlist/">Waitlist</a>
+      </nav>
+    </footer>
+  </body>
+</html>
