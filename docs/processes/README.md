@@ -11,6 +11,7 @@ Process documents are durable. They evolve when the underlying practice evolves;
 | [Runbook execution protocol](runbook-execution-protocol.md) | The discipline for authoring, executing, and verifying runbooks. Single-command discipline, two-window pattern, stop on error, DRAFT → VERIFIED status flow. |
 | [Issue-to-fix pattern](issue-to-fix-pattern.md) | The PRD-driven workflow used to delegate substantive engineering work to Claude Code in sandbox, with operator review through the PR chain. |
 | [Incident response](incident-response.md) | Triage checklist, escalation criteria, and postmortem trigger threshold. Stub today; fills out substantively after first real incident. |
+| [Incident log](incident-log.md) | Public-safe incident index. Starts empty; client-impacting or security-relevant events get one-line entries. |
 | [Postmortem template](postmortem-template.md) | Blameless postmortem template. Sections for summary, timeline, root cause, impact, what went well, what went poorly, action items, lessons. |
 | [Code review checklist](code-review-checklist.md) | Self-review checklist for the solo+AI workflow. Honest about the constraint (one human reviewer, AI executor). Applied by the operator before merge and by the executor before opening the PR. |
 | [Branch protection](branch-protection.md) | Spec for the GitHub branch-protection settings on `main`. Documents enabled rules and aspired rules with the asymmetries (signed commits, required reviews) explained. |

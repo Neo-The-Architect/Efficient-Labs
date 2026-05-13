@@ -7,6 +7,7 @@ This directory holds documents written for the operator's own benefit — refere
 | Document | Purpose |
 | --- | --- |
 | [Command reference](command-reference.md) | Cold-start command reference. The first document opened when returning after a break. Covers VPS access, sandbox launch, two-user discipline, common operations, emergency recovery, auth inventory, key URLs. **Living document, draft v1 from workspace context** — will be augmented from the operator's external canonical reference in a follow-up commit. |
+| [Vendor escalation](vendor-escalation.md) | Pre-client vendor escalation stub. Names the vendor classes and evidence to capture before escalating, without publishing private account contacts. |
 | [Onboarding](onboarding.md) | Onboarding document for a future operator (or future-Neo after a long break). **Stub.** Substance lands when the first second-operator joins or when the operator returns from a break long enough to test the document against their own memory. |
 
 ## What lives here vs. elsewhere
@@ -16,7 +17,7 @@ This directory holds documents written for the operator's own benefit — refere
 - **Processes:** in [`docs/processes/`](../processes/). Processes describe how the team operates (review cycle, incident response, runbook authoring discipline).
 - **ADRs:** in [`docs/adr/`](../adr/). Decisions that constrain subsequent work.
 - **Architecture report:** in [`docs/architecture/`](../architecture/). The canonical design document.
-- **Vendor escalation contacts:** not yet on disk; tracked as a gap in [`docs/processes/incident-response.md`](../processes/incident-response.md) under "open questions."
+- **Vendor escalation:** [`vendor-escalation.md`](vendor-escalation.md). Public-safe stub for escalation evidence and vendor classes; private account contacts stay out of git.
 
 ## How to add an operator document
 
