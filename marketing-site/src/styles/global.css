@@ -77,3 +77,19 @@ button { min-height: 46px; border: 0; border-radius: 8px; margin-top: 14px; padd
   .evidence-list, .service-grid { grid-template-columns: 1fr; }
   .site-footer { flex-direction: column; }
 }
+
+.status-note { color: var(--muted); font-size: 14px !important; line-height: 1.5 !important; margin-top: 14px; }
+.proof-section .button { margin-top: 12px; }
+.final-cta { background: #ebe5d8; max-width: none; padding-left: max(16px, calc((100% - var(--max)) / 2)); padding-right: max(16px, calc((100% - var(--max)) / 2)); }
+.final-cta > div { max-width: 780px; }
+.table-wrap { overflow-x: auto; margin-top: 22px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+table { width: 100%; border-collapse: collapse; min-width: 620px; }
+th, td { text-align: left; vertical-align: top; padding: 16px; border-bottom: 1px solid var(--line); line-height: 1.5; }
+tr:last-child th, tr:last-child td { border-bottom: 0; }
+th { width: 28%; font-weight: 800; color: var(--ink); }
+td { color: var(--muted); }
+.check-list { padding-left: 20px; color: var(--muted); font-size: 18px; line-height: 1.65; }
+.check-list li + li { margin-top: 8px; }
+.faq article { border-top: 1px solid var(--line); padding: 22px 0; }
+.faq article:last-child { border-bottom: 1px solid var(--line); }
+.three { width: min(var(--max), calc(100% - 32px)); margin-left: auto; margin-right: auto; }

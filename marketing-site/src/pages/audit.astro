@@ -4,28 +4,69 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout title="AI Sovereignty Audit | Efficient Labs">
   <section class="page-hero narrow">
     <h1>72-hour AI Sovereignty Audit.</h1>
-    <p>A practical review of automation risk, ownership boundaries, agent governance, and the next implementation steps for operators who need calm infrastructure.</p>
+    <p>A structured review of your automation risk, ownership boundaries, agent governance, and implementation gaps. Not consulting-speak. Findings you can act on this week.</p>
   </section>
+
+  <section class="section narrow">
+    <h2>Five areas. One deliverable.</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Pillar</th><th>What we assess</th></tr></thead>
+        <tbody>
+          <tr><td>Sovereignty</td><td>Who owns the output? Where does your data go? What happens when the vendor changes pricing?</td></tr>
+          <tr><td>Observability</td><td>Can you audit what your agents did last week? Can an external auditor?</td></tr>
+          <tr><td>Governance</td><td>Are there operator gates before the automation sends, charges, or publishes?</td></tr>
+          <tr><td>Secrets posture</td><td>Where are credentials stored? Who rotates them? What is the blast radius if one leaks?</td></tr>
+          <tr><td>Audit trail</td><td>Is there a tamper-evident record of what ran, when, and why?</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section narrow">
+    <h2>Deliverable: findings report</h2>
+    <p>PDF findings report delivered within 72 business hours of intake completion.</p>
+    <ul class="check-list">
+      <li>Per-pillar findings: what we found, what it means, and the risk level.</li>
+      <li>Remediation priorities: top actions ordered by impact and effort.</li>
+      <li>Implementation notes: specific, not generic, tied to your stack.</li>
+      <li>Cross-verification notes: where multi-agent review surfaced a finding single-review assessments miss.</li>
+    </ul>
+    <p class="status-note">A sample anonymized deliverable will be published when the audit-product spec is complete.</p>
+  </section>
+
   <section class="section service-grid three">
     <article>
       <h2>Standard</h2>
       <p class="price">$797</p>
-      <p>Core audit, 5-pillar review, implementation priorities, PDF delivery.</p>
+      <p>Core audit. All five pillars. Implementation priorities. PDF delivery within 72 hours.</p>
+      <p class="status-note">Ordering opens July 2026.</p>
     </article>
     <article>
       <h2>Pro</h2>
       <p class="price">$1,497</p>
-      <p>Standard audit plus deeper architecture review and operator walkthrough.</p>
+      <p>Standard audit plus deeper architecture review, operator walkthrough call, and prioritized remediation plan.</p>
+      <p class="status-note">Ordering opens July 2026.</p>
     </article>
     <article>
       <h2>Bespoke</h2>
       <p class="price">Scoped</p>
-      <p>For operators who need system design, remediation, and delivery support.</p>
+      <p>For operators who need system design, hands-on remediation, and delivery support alongside the findings.</p>
+      <p class="status-note">Scope and availability at launch.</p>
     </article>
   </section>
+
   <section class="section narrow panel muted-panel">
     <h2>Ordering is not live yet.</h2>
-    <p>Stripe Checkout, intake routing, and SLA clock semantics require operator approval before the audit can be sold publicly.</p>
-    <a class="button primary" href="/waitlist/">Join launch list</a>
+    <p>Stripe Checkout, intake routing, and SLA clock semantics require operator approval before the audit can be sold publicly. The waitlist captures interest in the meantime.</p>
+    <a class="button primary" href="/waitlist/">Join the launch list</a>
+  </section>
+
+  <section class="section faq narrow">
+    <h2>Questions</h2>
+    <article><h3>How long does the audit take?</h3><p>72 business hours from when intake is complete and payment is confirmed. The SLA clock starts when both conditions are met, not at form submission.</p></article>
+    <article><h3>What do you need from me?</h3><p>A short inventory of your current AI tools, automation workflows, and access to read-only artifacts such as configs, audit logs, and existing documentation. We send a structured intake form after booking.</p></article>
+    <article><h3>Is this just a checklist?</h3><p>No. The findings are specific to your stack, not template-mapped. Multi-agent cross-verification is what produces the findings column that single-model assessments miss.</p></article>
+    <article><h3>What if I am not technical?</h3><p>The deliverable is written for operators, not engineers. Findings are risk-level-rated; remediation priorities are ordered by business impact, not complexity.</p></article>
   </section>
 </BaseLayout>
