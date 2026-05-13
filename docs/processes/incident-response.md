@@ -18,7 +18,7 @@ Routine alerts (a brief retry burst, a slow query) are not incidents. The bounda
 
 When an incident is identified, the operator runs the following checklist in order. The checklist is short on purpose — long checklists are skipped under stress.
 
-1. **Capture the time and the symptom.** A one-line note in the incident log (TBD: where the log lives — see open question below). Timestamp matters for the postmortem timeline.
+1. **Capture the time and the symptom.** A one-line note in [incident-log.md](incident-log.md). Timestamp matters for the postmortem timeline.
 2. **Stop further changes.** Do not deploy, do not run runbooks, do not push commits to `main` until the incident is contained. The exception is a change that is part of the containment.
 3. **Read the most recent change history.** `git log -20` and the most recent merged PRs. Most production issues are caused by the most recent change; ruling that in or out is the cheapest first move.
 4. **Read the relevant logs.** `journalctl -u <service> --since '15 minutes ago'` for service-level incidents. Tailscale admin console for access incidents. `dmesg | tail` for host-level (OOM, disk-full, kernel) incidents.
@@ -51,9 +51,8 @@ The postmortem template is at [`postmortem-template.md`](postmortem-template.md)
 
 ## What is not in this document yet (open questions)
 
-- **Where the incident log lives.** Today there is no incident log because there have been no incidents. The log should be a single file in this repo (likely `docs/operations/incident-log.md`, not yet created) where each incident gets a one-line entry with timestamp, symptom, resolution, and a pointer to the postmortem if one was written. Land this file before the first paying client.
 - **Paging path.** Today the operator is the only responder and is reachable through the operator's primary devices (laptop, phone). Paging is not formalized. Once a second responder exists or once SLA commitments are made to clients, this section names the paging path explicitly.
-- **Vendor escalation contacts.** The list of who to contact at each vendor (Hostinger support, Tailscale support, Anthropic support, Stripe support) and the SLA each vendor offers. Not yet on disk; should be in `docs/operators/vendor-escalation.md` (not yet created) when this document is filled out.
+- **Vendor escalation account details.** The public-safe escalation shape now lives in [`../operators/vendor-escalation.md`](../operators/vendor-escalation.md). Private support portal links, account identifiers, emergency phone numbers, and contract-specific SLAs stay out of git and must be stored in the operator's private vault/password manager.
 - **Incident severity classification.** No formal SEV1/SEV2/SEV3 scheme yet. For a single-operator company without external SLAs, the binary "is this an incident" is sufficient; this document grows a severity scheme when the SLA structure of paying engagements requires one.
 - **Communication during incidents.** Today there are no clients to communicate with during an incident. When the first paying client is onboarded, the publish-policy template (in `legal/publish-policy-template.md`, when that lands) gates what is shared publicly during an incident. This document grows a section on client communication at that point.
 
