@@ -1,29 +1,71 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Methodology | Efficient Labs">
+<BaseLayout
+  title="Methodology | Efficient Labs"
+  description="The public methodology behind Efficient Labs: operator gates, multi-agent execution boundaries, and evidence trails by default."
+  canonicalPath="/methodology/"
+>
   <section class="page-hero narrow">
     <h1>The methodology is public.</h1>
-    <p>Efficient Labs operates through Orchestral: a disciplined way for one operator to govern multiple AI agents, task queues, evidence artifacts, and launch gates without losing control of the business.</p>
+    <p>Efficient Labs operates through Orchestral, a disciplined framework for one operator to govern multiple AI agents, task queues, evidence artifacts, and launch gates without losing control of the business.</p>
+    <a class="button secondary" href="https://github.com/Neo-The-Architect/Orchestral">Read Orchestral on GitHub</a>
+    <p class="status-note">Orchestral v0.3 methodology content ships before launch. The repo link is live; content depth lands with the v0.3 PR.</p>
+  </section>
+
+  <section class="section band">
+    <div class="section-heading"><h2>Three principles. Applied to every engagement.</h2></div>
+    <div class="evidence-list">
+      <article><span>Govern</span><h3>Operator gates everywhere</h3><p>Secrets, spend, public launch actions, and infrastructure risk require explicit human approval. Agents propose; operators decide.</p></article>
+      <article><span>Build</span><h3>Agent execution with clean boundaries</h3><p>Claude, Codex, and Gemini each have defined roles, read/write scopes, and task-queue constraints. No open-ended prompting on production systems.</p></article>
+      <article><span>Prove</span><h3>Evidence trail by default</h3><p>Every capability promotion needs classification, smoke tests, and documented decision boundaries. If you cannot point to the artifact, it did not happen.</p></article>
+    </div>
+  </section>
+
+  <section class="section narrow">
+    <h2>Orchestral: open-source, operator-agnostic</h2>
+    <p>Orchestral is the methodology, not the product. It defines how a solo operator governs a multi-agent system: role boundaries, coordination patterns, earned-complexity discipline, and the vault structure that makes audit possible.</p>
+    <p>It is MIT-licensed. You can adopt it without engaging Efficient Labs.</p>
+    <p>If you want the infrastructure built for you, or an audit of what you have already built, that is where the commercial offer begins.</p>
     <a class="button secondary" href="https://github.com/Neo-The-Architect/Orchestral">Read Orchestral on GitHub</a>
   </section>
-  <section class="section band">
-    <div class="evidence-list">
-      <article>
-        <span>Govern</span>
-        <h2>Operator gates</h2>
-        <p>Secrets, spend, public launch actions, and infrastructure risk require explicit human approval.</p>
-      </article>
-      <article>
-        <span>Build</span>
-        <h2>Agent execution</h2>
-        <p>Claude, Codex, and Gemini split planning, implementation, and review through durable artifacts.</p>
-      </article>
-      <article>
-        <span>Prove</span>
-        <h2>Evidence trail</h2>
-        <p>Every capability promotion needs classification, smoke tests, and documented boundaries.</p>
-      </article>
+
+  <section class="section narrow">
+    <h2>We do not build what you do not need yet.</h2>
+    <p>Most AI automation projects fail not because of the technology, but because complexity accumulates faster than it is governed.</p>
+    <p>We apply a strict discipline: no system surface is built until its absence has caused a documented failure. Every addition requires a journaled reason. Every deferral is logged.</p>
+    <p>The result: systems that stay legible, maintainable, and auditable as they grow.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>How a client engagement works</h2>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><th>Intake</th><td>Structured form captures your current stack, goals, and constraints. SLA clock starts when intake is complete and payment is confirmed.</td></tr>
+          <tr><th>Audit or buildout</th><td>Agents assess or build per the Orchestral framework. Cross-verification pass on findings before delivery.</td></tr>
+          <tr><th>Delivery</th><td>PDF report for audits, or documented infrastructure handover for buildout. Operator walkthrough on Pro tier.</td></tr>
+          <tr><th>Post-delivery</th><td>Async Q&A for scoped tiers. Standard tier is delivery-complete.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="status-note">Full engagement protocols are published after operator approval. The table reflects current design intent, not a binding contract.</p>
+  </section>
+
+  <section class="section narrow proof-section">
+    <h2>Proof, not claims.</h2>
+    <p>The architecture behind this site, including agent coordination, task queuing, and hardening evidence, is the same infrastructure we use for client work.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Proof asset</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Efficient Labs public repo</td><td>In progress</td></tr>
+          <tr><td>Orchestral v0.3 methodology content</td><td>Scheduled before launch</td></tr>
+          <tr><td>Sanitized build-in-public case study</td><td>Pending approval</td></tr>
+          <tr><td>Sample anonymized audit deliverable</td><td>Pending audit-product spec</td></tr>
+          <tr><td>Lynis hardening evidence pack</td><td>Evidence captured</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 </BaseLayout>

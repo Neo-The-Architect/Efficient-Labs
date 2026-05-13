@@ -1,16 +1,20 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Efficient Labs | Governed AI Infrastructure">
+<BaseLayout
+  title="Efficient Labs | Governed AI Infrastructure"
+  description="Governed AI infrastructure, sovereign substrate, and audit-grade evidence for operators who refuse chaos."
+  canonicalPath="/"
+>
   <section class="hero section-grid">
     <div class="hero-copy">
       <h1>AI infrastructure for operators who refuse chaos.</h1>
-      <p class="lead">Multi-agent governance, sovereign substrate, audit-grade evidence. Built in public; receipts on GitHub.</p>
+      <p class="lead">Multi-agent governance, sovereign substrate, audit-grade evidence. Built in public. Receipts on GitHub.</p>
       <div class="hero-actions">
         <a class="button primary" href="/waitlist/">Join the waitlist</a>
-        <a class="button secondary" href="/audit/">View the audit</a>
+        <a class="button secondary" href="/audit/">See the audit outline</a>
       </div>
-      <p class="launch-note">July 2026 launch. Waitlist and audit ordering are not live yet.</p>
+      <p class="launch-note">July 2026 launch. Waitlist and ordering are not live yet.</p>
     </div>
     <div class="hero-visual" aria-label="Efficient Labs infrastructure map">
       <img src="/architecture-signal.svg" alt="Governed AI infrastructure map" />
@@ -19,54 +23,75 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   <section class="section narrow">
     <h2>What this is</h2>
-    <p>Efficient Labs builds AI automation that can survive hard questions. The work is designed for operators who need clear ownership, audit trails, private client boundaries, and workflows that do not collapse into manual patchwork after the demo.</p>
+    <p>Efficient Labs builds AI automation that can survive hard questions.</p>
+    <p>The work is designed for operators who need clear ownership, audit trails, private client data boundaries, and workflows that do not collapse into manual patchwork after the first real deployment.</p>
+    <p>No demoware. No lock-in to a vendor scaffold. Infrastructure you can inspect, run yourself, and hand to an auditor.</p>
   </section>
 
   <section class="section band">
     <div class="section-heading">
       <h2>Public discipline. Private client data.</h2>
-      <p>Architecture decisions, runbooks, and public-safe evidence live in GitHub. Client workflows, intake artifacts, and business data stay in private repositories and controlled systems.</p>
+      <p>Architecture decisions, runbooks, and public-safe evidence live on GitHub. Client workflows, intake artifacts, and business data stay in private repositories and controlled systems.</p>
     </div>
     <div class="evidence-list">
       <article>
         <span>01</span>
         <h3>Architecture records</h3>
-        <p>Load-bearing decisions are documented with rollback logic and scope boundaries.</p>
+        <p>Load-bearing decisions are documented with scope boundaries and rollback logic.</p>
       </article>
       <article>
         <span>02</span>
         <h3>Hardened substrate</h3>
-        <p>VPS, Tailscale, audit logs, and agent boundaries are treated as product infrastructure.</p>
+        <p>Infrastructure is treated as product: access controls, audit logs, and agent boundaries are first-class.</p>
       </article>
       <article>
         <span>03</span>
         <h3>Governed agents</h3>
-        <p>Claude, Codex, Gemini, and operator gates work through task queues and review artifacts.</p>
+        <p>Multiple AI agents work through task queues and operator-review gates, not open-ended prompting.</p>
       </article>
     </div>
   </section>
 
   <section class="section services">
     <div>
-      <h2>Launch services</h2>
-      <p>These offers stay in local preview until Stripe, intake, and operator launch gates clear.</p>
+      <h2>What we deliver</h2>
+      <p>Three offers, each scoped to a different stage of readiness.</p>
     </div>
     <div class="service-grid">
       <article>
         <h3>AI Sovereignty Audit</h3>
-        <p>72-hour review of automation risk, ownership, governance, and implementation gaps.</p>
-        <a href="/audit/">Read audit outline</a>
+        <p>What your automation stack actually owns, what it exposes, and what to fix first. 72-hour turnaround. Deliverable: PDF findings report.</p>
+        <p class="status-note">Ordering opens July 2026.</p>
+        <a href="/audit/">Read the audit outline</a>
       </article>
       <article>
         <h3>Sovereign Stack Setup</h3>
-        <p>Practical buildout for operators ready to own their AI fulfillment substrate.</p>
-        <a href="/waitlist/">Join launch list</a>
+        <p>Practical buildout for operators ready to own their AI fulfillment substrate. From agents to substrate to task routing, built and handed over.</p>
+        <p class="status-note">Scope and availability at launch.</p>
+        <a href="/waitlist/">Join the launch list</a>
       </article>
       <article>
         <h3>Embedded Architect</h3>
-        <p>Ongoing architecture, review, and automation delivery for growing operators.</p>
-        <a href="/methodology/">See methodology</a>
+        <p>Ongoing architecture, review, and automation delivery for operators scaling past solo execution.</p>
+        <p class="status-note">Scoped engagements from launch.</p>
+        <a href="/methodology/">See the methodology</a>
       </article>
+    </div>
+  </section>
+
+  <section class="section narrow proof-section">
+    <h2>Built in public. Everything verifiable.</h2>
+    <p>The methodology is open source. The decision log is on GitHub. The agent coordination framework, Orchestral, is MIT-licensed.</p>
+    <p>If you want to understand how we work before you engage, you do not have to ask. Read the commits.</p>
+    <a class="button secondary" href="https://github.com/Neo-The-Architect/Orchestral">Read Orchestral on GitHub</a>
+    <p class="status-note">Orchestral v0.3 public methodology content ships before launch.</p>
+  </section>
+
+  <section class="section final-cta">
+    <div>
+      <h2>You are early. The infrastructure is not.</h2>
+      <p>Most operators who find us find us before launch. That is intentional. The waitlist captures interest. Priority booking goes to waitlist members. Ordering opens July 2026.</p>
+      <a class="button primary" href="/waitlist/">Join the waitlist</a>
     </div>
   </section>
 </BaseLayout>

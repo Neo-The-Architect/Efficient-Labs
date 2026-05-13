@@ -1,17 +1,49 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Waitlist | Efficient Labs">
+<BaseLayout
+  title="Waitlist | Efficient Labs"
+  description="Join the Efficient Labs launch waitlist for priority booking and launch-week updates before public ordering opens."
+  canonicalPath="/waitlist/"
+>
   <section class="page-hero narrow">
     <h1>You are early. We launch July 2026.</h1>
-    <p>Join the waitlist for priority booking and launch-week updates. The live form backend is intentionally disabled until the waitlist storage gate clears.</p>
+    <p>Join the waitlist for priority booking and launch-week updates. No spam. One email when the door opens.</p>
+    <p class="status-note">The form backend is not live. Cloudflare Worker plus storage topology decision pending operator gate.</p>
   </section>
+
   <section class="section form-section">
     <form class="panel" aria-describedby="waitlist-status">
       <label for="email">Email</label>
       <input id="email" name="email" type="email" placeholder="you@example.com" disabled />
       <button type="button" disabled>Waitlist opens soon</button>
-      <p id="waitlist-status">Backend pending: Cloudflare Worker plus canonical storage decision.</p>
+      <p id="waitlist-status">Backend pending: operator storage gate.</p>
     </form>
+  </section>
+
+  <section class="section narrow">
+    <h2>What waitlist members get</h2>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><th>Priority booking</th><td>First access to the AI Sovereignty Audit and Sovereign Stack Setup engagements at launch.</td></tr>
+          <tr><th>Launch-week rate</th><td>Audit at Standard rate held for 30 days post-launch for waitlist members.</td></tr>
+          <tr><th>Build-in-public updates</th><td>Architectural decisions, methodology releases, and infrastructure milestones as they ship, with no noise.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="status-note">Prices are indicative. Confirmed at launch.</p>
+  </section>
+
+  <section class="section band">
+    <div class="section-heading">
+      <h2>Why this is different</h2>
+      <p>Every claim on this site is backed by public artifacts. If you want to verify before you sign up, you can.</p>
+    </div>
+    <div class="evidence-list">
+      <article><span>GitHub</span><h3>Commits and decisions</h3><p>Architecture records, runbooks, and launch artifacts are public-safe by default.</p></article>
+      <article><span>Orchestral</span><h3>Open methodology</h3><p>The operating framework is visible before any commercial engagement starts.</p></article>
+      <article><span>Case study</span><h3>Sanitized proof</h3><p>Build-in-public retrospectives publish only after sanitizer and operator approval.</p></article>
+    </div>
   </section>
 </BaseLayout>
