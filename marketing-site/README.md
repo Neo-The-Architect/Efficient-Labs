@@ -18,3 +18,7 @@ This scaffold does not deploy anything, create spend, add analytics, connect Str
 - Waitlist form is visually present but non-live.
 - Audit order CTA is visually present but non-live.
 - Public DNS, Cloudflare Pages, Stripe, and launch announcements require explicit operator approval.
+
+## Pre-Launch Indexing
+
+`public/robots.txt` intentionally disallows crawling while the site is local/pre-launch. Remove or relax this only during the explicit public launch gate.
