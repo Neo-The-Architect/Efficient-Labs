@@ -18,13 +18,17 @@ get the same logic via `.pre-commit-config.yaml` at the repo root.
 
 ## Operator setup (one-time, after creating the denylist)
 
-Grant the `claude` user read-only access to the denylist without exposing the
-rest of the vault:
+Grant agent users read-only access to the denylist without exposing the
+rest of the vault. Claude and Codex both need this access when they can commit
+to this public repo:
 
 ```sh
 sudo setfacl -m u:claude:--x /home/neo
 sudo setfacl -m u:claude:--x /home/neo/vault
 sudo setfacl -m u:claude:r-- /home/neo/vault/anonymization-denylist.txt
+sudo setfacl -m u:codex:--x /home/neo
+sudo setfacl -m u:codex:--x /home/neo/vault
+sudo setfacl -m u:codex:r-- /home/neo/vault/anonymization-denylist.txt
 ```
 
 ## Local testing
