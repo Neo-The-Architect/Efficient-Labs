@@ -1,68 +1,76 @@
 # Efficient Labs
 
-Sovereign, AI-native fulfillment infrastructure for regulated-industry automation. Weft typed graphs + Paperclip agent OS + Claude intelligence, hardened VPS substrate, n8n as deliverable. Built in public.
+AI workflows for operators tired of manual chaos.
 
-## What is Efficient Labs
+Efficient Labs helps multi-location service businesses turn scattered intake, reporting, support, documentation, and content work into governed workflows that scale without the noise.
 
-Most automation agencies sell automation while their own ops run on Notion plus Zapier plus manual Stripe links. Efficient Labs sells automation built by automation, with the receipts on GitHub. The thesis is that for regulated-industry buyers — operators who need an actual data-processing agreement, an actual sub-processor list, and audit-grade logs — sovereignty is the moat. A vendor that runs its own fulfillment on a hardened VPS, mesh-networked through Tailscale, and ships every non-confidential artifact to a public repo is structurally credible in a way a Zapier reseller is not.
+## What We Build
 
-The stack is opinionated and load-bearing. [**Weft**](https://github.com/WeaveMindAI/weft) is the typed dataflow language with durable execution; it owns the deterministic outer loop — webhook ingest, enrichment, qualification, proposal generation, Stripe checkout, delivery orchestration, monitoring crons. [**Paperclip**](https://github.com/paperclipai/paperclip) is the multi-agent business OS; it owns the judgment-heavy inner loop — the Solutions Architect agent that writes PRDs, the n8n CTO agent that writes workflow JSON, the QA agent that critiques it, the internal CEO/Sales/Ops agents that run Efficient Labs itself. **Claude** (direct Anthropic API, not a router) is the intelligence layer for both, with Sonnet 4.6 and Opus 4.7 as the workhorses and Haiku 4.5 for cheap classification. **n8n** is strictly the deliverable — Standard tier ships the JSON file as a handoff, Sovereign tier provisions a managed instance on the VPS (currently blocked pending an n8n Embed license conversation; see `docs/adr/0003`).
+Efficient Labs designs practical AI-assisted workflows for operators who need clearer handoffs, not another generic automation demo.
 
-The build commitment is public-by-default. Every Weft program, every SKILL.md, every n8n workflow archetype, every architecture decision record, every infrastructure runbook, every legal template gets committed to this repo. Client-confidential artifacts — PRDs naming a client, actual workflow JSON with embedded business logic, real lead data — live in separate private repositories. The boundary is mechanical, not discretionary: each client repo carries a `PUBLISH_POLICY.md` with three opt-in checkboxes default-no, and the publishing automations refuse to act until those checkboxes flip.
+Initial workflow categories:
 
-The canonical design document for the whole system lives at [`docs/architecture/2026-04-27-fulfillment-architecture-report.md`](docs/architecture/2026-04-27-fulfillment-architecture-report.md). Read it before contributing or evaluating.
+- **Lead triage** — prioritize and summarize inquiries for human follow-up.
+- **Operations reporting** — turn recurring updates into decision-ready summaries.
+- **Support triage** — classify, summarize, and route repeat requests.
+- **Documentation Q&A** — help teams find answers in approved operating documents.
+- **Content production** — turn approved operational learning into draft content.
+- **Managed agent systems** — maintain and improve workflows after they go live.
 
-## Operating Methodology
+## Current Status
 
-Efficient Labs operates within [The Orchestration Framework](https://github.com/Neo-The-Architect/Orchestral) — a public methodology that defines how a single human operator commands an agentic stack of AI tools through structured files. The framework specifies philosophical foundations, vault file architecture, agentic stack roles, operating rhythms, trigger words, and recurring failure modes.
+Efficient Labs is in founding-cohort preparation.
 
-The engineering discipline visible in this repo (Architecture Decision Records, runbooks, infrastructure audits, public commit attribution to AI agents) instantiates the framework. The methodology evolves independently at its own repo and may be adopted by other operators.
+The public site is not collecting emails yet. The audit product is not publicly orderable yet. Payment, intake, privacy, SLA, and refund terms will be published only after those delivery paths are approved.
 
-Efficient Labs applies the Orchestral methodology to client engagements. Three-repo architecture:
+## Method
 
-- **Solo-AI** (private) — Sovereign Orchestration Layer Ontology
-- **Orchestral** (public) — Open methodology
-- **Efficient-Labs** (this repo, public) — Commercial trust layer
+Efficient Labs works from a simple operating rule: automation should reduce chaos without removing accountability.
 
-See [ADR 0006](docs/adr/0006-orchestration-framework-as-operating-methodology.md) for the formal decision establishing this relationship.
+Every workflow should have:
 
-## Repository structure
+- a clear owner;
+- a boundary for what the system may do;
+- a review path for sensitive work;
+- a way to measure whether it is helping;
+- a path to improve after real usage.
+
+## Trust Posture
+
+Efficient Labs is built around process discipline, not hype.
+
+Current public-safe proof points:
+
+- explicit approval gates for sensitive actions;
+- internal cross-check protocol before public or irreversible work;
+- documented operating cadence;
+- data privacy guardrails;
+- incremental deployment in small, reviewable stages;
+- data paths are secured and authorized before sensitive information is processed;
+- no live email collection on this site.
+
+## Repository Structure
 
 | Path | Purpose |
 |---|---|
-| `docs/architecture/` | Canonical design documents. The fulfillment architecture report is the source of truth. |
-| `docs/adr/` | Architecture Decision Records. Every load-bearing decision lands here with a kill switch. |
-| `weft-programs/` | Weft `.wft` source for the deterministic orchestration graphs (lead intake, proposal, Stripe, delivery, monitoring). |
-| `paperclip-skills/` | `SKILL.md` files for the canonical Paperclip agents (Onboarding, Solutions Architect, n8n CTO, QA, Support, internal ops). |
-| `n8n-archetypes/` | The opinionated catalog of n8n workflow shapes — sanitized JSON exemplars for each archetype the n8n CTO agent has shipped. |
-| `infra/` | systemd unit templates and operator runbooks for the VPS substrate (Postgres, Restate, Weft, Paperclip, per-client n8n). |
-| `legal/` | MSA, DPA, and public-build playbook templates. |
-| `case-studies/` | Public engagement writeups, generated by the Paperclip Content Publishing agent and operator-approved before they leave `_drafts/`. |
-| `marketing-site/` | Astro project for the public-facing site (Cloudflare Pages, deliberately not on the VPS). |
-| `plugin-paperclip-weft-bridge/` | The open-source Paperclip plugin that POSTs Paperclip events to Weft webhook triggers. Resolves the missing-outbound-webhook gap (Paperclip issue #1790). MIT-licensed, useful to the broader Paperclip community. |
+| `case-studies/` | Future public proof artifacts after review and approval. |
+| `docs/` | Public documentation, security notes, and operating references. |
+| `legal/` | Public legal and policy templates when approved. |
+| `marketing-site/` | Public-facing site scaffold. |
+| `observability/` | Public-safe observability notes and examples. |
+| `operators/` | Operator-facing public documentation. |
+| `processes/` | Public-safe process descriptions and templates. |
 
-## Status
+## Public Methodology
 
-**Week 1 of build, foundation phase.** The architecture is decided (see `docs/architecture/`). The repo scaffolding, ADRs, and infrastructure runbook stubs are landing this week. The Weft lead-intake graph is the next deliverable.
+Efficient Labs will link to Orchestral methodology content after the relevant public sections are reviewed and approved.
 
-**Not yet accepting clients.** Watch this repo for the launch signal — the first paying-client-ready milestone is the end of Week 3 per architecture report Section 8, gated on the n8n CTO agent shipping.
+## Contact
 
-## Why public
+Public contact path is under review before launch.
 
-Two reasons.
-
-The credibility flywheel is the obvious one. A regulated-industry buyer can read the actual code that will run their fulfillment, read the actual ADRs explaining the decisions, read the actual DPA template before a sales call. That is structurally more credible than any case study deck.
-
-The discipline is the less-obvious one. Public-by-default forces the file-system boundary between confidential and showable to be mechanical, not discretionary. An operator who can publish anything tends to publish nothing; an operator who must publish everything except the explicitly-private set ships the build-in-public flywheel as a side effect of doing the work.
+No compliance certifications. No paid offerings. No email collection at this time.
 
 ## License
 
-MIT (`LICENSE`). Permissive on purpose — the public artifacts are designed to be reused.
-
-Client-confidential work lives in separate private repos under a different licensing posture; nothing in those repos is touched by this license.
-
-## Operator
-
-Built by [@NeoTheArchitect](https://github.com/Neo-The-Architect) — single operator, Philippines, building this in public.
-
-Contact: TBD.
+MIT (`LICENSE`).
