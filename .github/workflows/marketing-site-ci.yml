@@ -1,0 +1,48 @@
+name: Marketing Site CI
+
+on:
+  pull_request:
+    paths:
+      - "marketing-site/**"
+      - ".github/workflows/marketing-site-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "marketing-site/**"
+      - ".github/workflows/marketing-site-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: marketing-site-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build static Astro site
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: marketing-site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: marketing-site/.nvmrc
+          cache: npm
+          cache-dependency-path: marketing-site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Audit production dependency surface
+        run: npm audit --omit=dev --audit-level=moderate
+
