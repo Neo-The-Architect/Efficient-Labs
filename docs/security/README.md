@@ -7,6 +7,8 @@ This directory holds the internal security-posture documents for Efficient Labs 
 | Document | Status | Purpose |
 | --- | --- | --- |
 | [`threat-model.md`](threat-model.md) | Stub | STRIDE-based threat model for the Efficient Labs fulfillment surface. Will be filled when Layer 7 substantive work lands; pre-legal-review. |
+| [`anonymization-hook-verification-2026-05-13.md`](anonymization-hook-verification-2026-05-13.md) | Verified | Anonymization gate hook verification across the public clone. |
+| [`astro-6-3-3-audit-2026-05-17.md`](astro-6-3-3-audit-2026-05-17.md) | No action | Audit of marketing-site against Astro 6.3.3 hydrated-component XSS fix; site is fully static, no bump needed. |
 
 ## Pointers to related security artifacts
 
