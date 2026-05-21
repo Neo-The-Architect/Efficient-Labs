@@ -1,0 +1,83 @@
+{
+  "name": "Archetype 01 — Slack Notification on Webhook",
+  "_archetype_metadata": {
+    "tier": "standard",
+    "category": "notification",
+    "version": "0.1.0",
+    "description": "Triggered by webhook; posts a formatted Slack message. The canonical starter archetype for incident notifications, lead alerts, and operational ping flows. Customize the message template + Slack channel via the SET_DEFAULTS node.",
+    "operator_action_required": [
+      "Replace <SLACK_WEBHOOK_URL> with the customer's incoming-webhook URL",
+      "Adjust the message template in SET_DEFAULTS to match customer voice",
+      "Configure the webhook trigger path to match the customer's integration"
+    ],
+    "deliverable_tier": "standard ($797) — ships as ready-to-import JSON",
+    "license": "Efficient Labs n8n archetype library — proprietary, ships under client engagement only"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incoming",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook (incoming)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "slack_webhook_url", "value": "<SLACK_WEBHOOK_URL>" },
+            { "name": "channel", "value": "#alerts" },
+            { "name": "username", "value": "Efficient Labs Bot" },
+            { "name": "message_template", "value": "🔔 *New event* — {{ $json.title || 'untitled' }}\n```\n{{ JSON.stringify($json, null, 2) }}\n```" }
+          ]
+        }
+      },
+      "id": "set-defaults",
+      "name": "SET_DEFAULTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $node['SET_DEFAULTS'].json['slack_webhook_url'] }}",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"channel\": \"{{ $node['SET_DEFAULTS'].json['channel'] }}\",\n  \"username\": \"{{ $node['SET_DEFAULTS'].json['username'] }}\",\n  \"text\": \"{{ $node['SET_DEFAULTS'].json['message_template'] }}\"\n}",
+        "options": {}
+      },
+      "id": "post-slack",
+      "name": "POST to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "delivered" },
+            { "name": "delivered_at", "value": "={{ $now.toISOString() }}" }
+          ]
+        }
+      },
+      "id": "set-status",
+      "name": "Set delivery status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (incoming)": { "main": [[{ "node": "SET_DEFAULTS", "type": "main", "index": 0 }]] },
+    "SET_DEFAULTS": { "main": [[{ "node": "POST to Slack", "type": "main", "index": 0 }]] },
+    "POST to Slack": { "main": [[{ "node": "Set delivery status", "type": "main", "index": 0 }]] }
+  }
+}

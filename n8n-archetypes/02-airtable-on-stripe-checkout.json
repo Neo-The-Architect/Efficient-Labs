@@ -1,0 +1,99 @@
+{
+  "name": "Archetype 02 — Airtable Record on Stripe Checkout Completed",
+  "_archetype_metadata": {
+    "tier": "standard",
+    "category": "commerce-integration",
+    "version": "0.1.0",
+    "description": "Triggered by Stripe checkout.session.completed webhook; verifies the signature, normalizes the customer payload, writes a record to Airtable, and acknowledges. The starter archetype for any commerce → CRM/spreadsheet sync flow. Customize the Airtable base+table via SET_DEFAULTS.",
+    "operator_action_required": [
+      "Replace <STRIPE_WEBHOOK_SIGNING_SECRET> with the customer's whsec_* (from Stripe dashboard)",
+      "Replace <AIRTABLE_API_KEY> with customer's Airtable PAT (scoped to one base)",
+      "Replace <AIRTABLE_BASE_ID> + <AIRTABLE_TABLE_ID> with the destination",
+      "Map Stripe customer fields to Airtable columns in the MAP_FIELDS node"
+    ],
+    "deliverable_tier": "standard ($797) — ships as ready-to-import JSON",
+    "sovereign_tier_addon": "For sovereign tier ($1,497), replace Airtable with operator's hosted PostgreSQL via the postgres node; the rest of the flow stays identical"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-webhook",
+        "responseMode": "lastNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "stripe-webhook",
+      "name": "Stripe webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "stripe_webhook_secret", "value": "<STRIPE_WEBHOOK_SIGNING_SECRET>" },
+            { "name": "airtable_api_key", "value": "<AIRTABLE_API_KEY>" },
+            { "name": "airtable_base_id", "value": "<AIRTABLE_BASE_ID>" },
+            { "name": "airtable_table_id", "value": "<AIRTABLE_TABLE_ID>" }
+          ]
+        }
+      },
+      "id": "set-defaults",
+      "name": "SET_DEFAULTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Verify Stripe signature — fail-closed if signature doesn't match.\n// This guards against forged webhook calls.\nconst crypto = require('crypto');\nconst sig = $input.first().headers['stripe-signature'];\nconst secret = $node['SET_DEFAULTS'].json['stripe_webhook_secret'];\nconst rawBody = $input.first().body;\n\nif (!sig || !secret || secret.startsWith('<')) {\n  return [{ json: { ok: false, error: 'missing_signature_or_secret' } }];\n}\n\nconst parts = sig.split(',').reduce((acc, p) => {\n  const [k, v] = p.split('='); acc[k] = v; return acc;\n}, {});\n\nconst expected = crypto.createHmac('sha256', secret)\n  .update(parts.t + '.' + JSON.stringify(rawBody))\n  .digest('hex');\n\nif (expected !== parts.v1) {\n  return [{ json: { ok: false, error: 'signature_mismatch' } }];\n}\n\nreturn [{ json: { ok: true, event: rawBody } }];"
+      },
+      "id": "verify-signature",
+      "name": "Verify Stripe signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "Customer Email", "value": "={{ $json.event.data.object.customer_details.email }}" },
+            { "name": "Amount", "value": "={{ $json.event.data.object.amount_total / 100 }}" },
+            { "name": "Currency", "value": "={{ $json.event.data.object.currency }}" },
+            { "name": "Stripe Session ID", "value": "={{ $json.event.data.object.id }}" },
+            { "name": "Created At", "value": "={{ new Date($json.event.created * 1000).toISOString() }}" }
+          ]
+        }
+      },
+      "id": "map-fields",
+      "name": "MAP_FIELDS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "application": "={{ $node['SET_DEFAULTS'].json['airtable_base_id'] }}",
+        "table": "={{ $node['SET_DEFAULTS'].json['airtable_table_id'] }}",
+        "authentication": "airtableTokenApi"
+      },
+      "id": "airtable-insert",
+      "name": "Airtable insert",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Stripe webhook": { "main": [[{ "node": "SET_DEFAULTS", "type": "main", "index": 0 }]] },
+    "SET_DEFAULTS": { "main": [[{ "node": "Verify Stripe signature", "type": "main", "index": 0 }]] },
+    "Verify Stripe signature": { "main": [[{ "node": "MAP_FIELDS", "type": "main", "index": 0 }]] },
+    "MAP_FIELDS": { "main": [[{ "node": "Airtable insert", "type": "main", "index": 0 }]] }
+  }
+}
