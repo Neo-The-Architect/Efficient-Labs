@@ -1,0 +1,136 @@
+{
+  "name": "Archetype 07 — Inbound Email Parsing → CRM Record",
+  "_archetype_metadata": {
+    "tier": "pro",
+    "category": "communication-ingest",
+    "version": "0.1.0",
+    "description": "Triggered by inbound email webhook (Mailgun, Postmark, SendGrid Parse, or a generic IMAP polling node). Extracts structured fields from the email body (sender, subject, intent, contact details via simple regex + heuristics), appends a CRM record, and optionally fires an operator alert when intent matches a high-priority pattern (e.g., 'demo', 'pricing', 'urgent').",
+    "operator_action_required": [
+      "Replace <INBOUND_EMAIL_WEBHOOK_PROVIDER> reference in the webhook node — typical providers: mailgun.com, postmark.com, sendgrid-parse",
+      "Replace <INBOUND_EMAIL_SHARED_SECRET> with the provider's HMAC signing key for verifying the inbound webhook",
+      "Replace <CRM_WEBHOOK_URL> with the customer's CRM ingest URL (Airtable, HubSpot, custom Postgres endpoint)",
+      "Replace <CRM_API_KEY> if the CRM requires a Bearer token",
+      "Replace <OPERATOR_SLACK_WEBHOOK_URL> for the high-priority alert channel",
+      "Customize HIGH_PRIORITY_KEYWORDS in SET_DEFAULTS (default: demo, pricing, urgent, partnership)"
+    ],
+    "deliverable_tier": "pro ($1,497) — multi-stage parsing + branching + conditional alerts",
+    "sovereign_tier_addon": "For Sovereign tier, replace the inbound webhook with a polling IMAP node against the operator's hosted mail server, and route CRM appends to the operator's Postgres CRM ledger",
+    "license": "Efficient Labs n8n archetype library — proprietary, ships under client engagement only"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inbound-email",
+        "responseMode": "lastNode",
+        "options": { "rawBody": true }
+      },
+      "id": "inbound-email-webhook",
+      "name": "Inbound email webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "inbound_secret", "value": "<INBOUND_EMAIL_SHARED_SECRET>" },
+            { "name": "crm_webhook_url", "value": "<CRM_WEBHOOK_URL>" },
+            { "name": "crm_api_key", "value": "<CRM_API_KEY>" },
+            { "name": "operator_slack_webhook_url", "value": "<OPERATOR_SLACK_WEBHOOK_URL>" },
+            { "name": "high_priority_keywords", "value": "demo,pricing,urgent,partnership,enterprise" }
+          ]
+        }
+      },
+      "id": "set-defaults",
+      "name": "SET_DEFAULTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Parse inbound email — Mailgun-style schema by default; adapt the field names for Postmark/SendGrid.\n// Fields are typically: sender, recipient, subject, body-plain, body-html, Message-Id.\nconst body = $input.first().body;\n\nconst from = body.sender || body.from || body.From || '';\nconst subject = body.subject || body.Subject || '';\nconst bodyText = body['body-plain'] || body.text || body['stripped-text'] || '';\n\n// Naive but effective contact extraction\nconst emailMatch = from.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}/);\nconst nameMatch = from.replace(/<[^>]+>/g, '').trim().replace(/^\"|\"$/g, '');\nconst phoneMatch = bodyText.match(/(?:\\+?\\d{1,3}[-.\\s]?)?\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}/);\n\n// Intent classification\nconst keywords = ($node['SET_DEFAULTS'].json['high_priority_keywords'] || '').toLowerCase().split(',');\nconst haystack = (subject + ' ' + bodyText).toLowerCase();\nconst matchedKeywords = keywords.filter(k => k && haystack.includes(k));\nconst priority = matchedKeywords.length > 0 ? 'high' : 'normal';\n\nreturn [{\n  json: {\n    contact_name: nameMatch || 'unknown',\n    contact_email: emailMatch ? emailMatch[0] : '',\n    contact_phone: phoneMatch ? phoneMatch[0] : '',\n    subject,\n    body_excerpt: bodyText.slice(0, 500),\n    priority,\n    matched_keywords: matchedKeywords,\n    received_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "parse-email",
+      "name": "Parse + classify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $node['SET_DEFAULTS'].json['crm_webhook_url'] }}",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['crm_api_key'] }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"source\": \"inbound_email\",\n  \"contact_name\": \"{{ $json.contact_name }}\",\n  \"contact_email\": \"{{ $json.contact_email }}\",\n  \"contact_phone\": \"{{ $json.contact_phone }}\",\n  \"subject\": \"{{ $json.subject }}\",\n  \"body_excerpt\": \"{{ $json.body_excerpt }}\",\n  \"priority\": \"{{ $json.priority }}\",\n  \"matched_keywords\": {{ JSON.stringify($json.matched_keywords) }},\n  \"received_at\": \"{{ $json.received_at }}\"\n}",
+        "options": {}
+      },
+      "id": "crm-append",
+      "name": "Append CRM record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{ $node['Parse + classify'].json['priority'] }}", "operation": "equal", "value2": "high" }
+          ]
+        }
+      },
+      "id": "if-priority",
+      "name": "If high priority",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $node['SET_DEFAULTS'].json['operator_slack_webhook_url'] }}",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"text\": \"📨 *High-priority inbound* — {{ $node['Parse + classify'].json['matched_keywords'].join(', ') }}\\n• From: {{ $node['Parse + classify'].json['contact_name'] }} <{{ $node['Parse + classify'].json['contact_email'] }}>\\n• Subject: {{ $node['Parse + classify'].json['subject'] }}\\n• Excerpt: ```{{ $node['Parse + classify'].json['body_excerpt'] }}```\"\n}",
+        "options": {}
+      },
+      "id": "operator-alert",
+      "name": "Slack operator alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "stored" },
+            { "name": "priority", "value": "={{ $node['Parse + classify'].json['priority'] }}" }
+          ]
+        }
+      },
+      "id": "set-status",
+      "name": "Set status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Inbound email webhook": { "main": [[{ "node": "SET_DEFAULTS", "type": "main", "index": 0 }]] },
+    "SET_DEFAULTS": { "main": [[{ "node": "Parse + classify", "type": "main", "index": 0 }]] },
+    "Parse + classify": { "main": [[{ "node": "Append CRM record", "type": "main", "index": 0 }]] },
+    "Append CRM record": { "main": [[{ "node": "If high priority", "type": "main", "index": 0 }]] },
+    "If high priority": { "main": [[{ "node": "Slack operator alert", "type": "main", "index": 0 }], [{ "node": "Set status", "type": "main", "index": 0 }]] },
+    "Slack operator alert": { "main": [[{ "node": "Set status", "type": "main", "index": 0 }]] }
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "name": "Archetype 09 — Plausible Traffic Spike → Operator Alert + Correlation Lookup",
+  "_archetype_metadata": {
+    "tier": "pro",
+    "category": "analytics-operations",
+    "version": "0.1.0",
+    "description": "Cron-scheduled every 15 minutes. Queries Plausible's stats API for current-hour pageviews vs the previous-hour baseline. If the current hour exceeds the baseline by a configurable spike threshold (default 3x), fires a Slack operator alert containing the spike magnitude, top referrers, and top pages. The starter archetype for analytics-driven operations.",
+    "operator_action_required": [
+      "Replace <PLAUSIBLE_SITE_ID> with the customer's Plausible site (typically the apex domain, e.g., efficientlabs.com)",
+      "Replace <PLAUSIBLE_API_KEY> with the customer's Plausible API key (Plausible settings → API keys)",
+      "Replace <OPERATOR_SLACK_WEBHOOK_URL> for the alert channel",
+      "Adjust SPIKE_MULTIPLIER in SET_DEFAULTS (default 3.0 means alert when current hour ≥ 3× previous hour)",
+      "Adjust MIN_HOURLY_VIEWS_FOR_ALERT to avoid alerting on noise from low-traffic windows (default 50)"
+    ],
+    "deliverable_tier": "pro ($1,497) — analytics integration + spike heuristic + multi-section Slack alert",
+    "sovereign_tier_addon": "For Sovereign tier, swap Plausible for the operator's hosted analytics (Umami, self-hosted Plausible, or a custom Postgres-based events table); query shape stays similar",
+    "license": "Efficient Labs n8n archetype library — proprietary, ships under client engagement only"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 15 }] }
+      },
+      "id": "every-15-min",
+      "name": "Every 15 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "plausible_site_id", "value": "<PLAUSIBLE_SITE_ID>" },
+            { "name": "plausible_api_key", "value": "<PLAUSIBLE_API_KEY>" },
+            { "name": "operator_slack_webhook_url", "value": "<OPERATOR_SLACK_WEBHOOK_URL>" }
+          ],
+          "number": [
+            { "name": "spike_multiplier", "value": 3.0 },
+            { "name": "min_hourly_views_for_alert", "value": 50 }
+          ]
+        }
+      },
+      "id": "set-defaults",
+      "name": "SET_DEFAULTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://plausible.io/api/v1/stats/aggregate?site_id={{ $node['SET_DEFAULTS'].json['plausible_site_id'] }}&period=hour&metrics=pageviews,visitors",
+        "method": "GET",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['plausible_api_key'] }}" }
+        ]}
+      },
+      "id": "current-hour",
+      "name": "Current hour stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://plausible.io/api/v1/stats/aggregate?site_id={{ $node['SET_DEFAULTS'].json['plausible_site_id'] }}&period=custom&date=PREVIOUS_HOUR&metrics=pageviews,visitors",
+        "method": "GET",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['plausible_api_key'] }}" }
+        ]}
+      },
+      "id": "previous-hour",
+      "name": "Previous hour baseline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Merge current + previous hour results and compute spike ratio.\nconst current = $node['Current hour stats'].json.results || $node['Current hour stats'].json;\nconst previous = $node['Previous hour baseline'].json.results || $node['Previous hour baseline'].json;\nconst currentViews = (current.pageviews && current.pageviews.value) || current.pageviews || 0;\nconst previousViews = (previous.pageviews && previous.pageviews.value) || previous.pageviews || 0;\nconst spikeMultiplier = $node['SET_DEFAULTS'].json['spike_multiplier'];\nconst minViews = $node['SET_DEFAULTS'].json['min_hourly_views_for_alert'];\n\nconst ratio = previousViews > 0 ? (currentViews / previousViews) : (currentViews > 0 ? Infinity : 0);\nconst isSpike = currentViews >= minViews && ratio >= spikeMultiplier;\n\nreturn [{\n  json: {\n    current_views: currentViews,\n    previous_views: previousViews,\n    ratio: Number(ratio.toFixed(2)),\n    is_spike: isSpike,\n    spike_multiplier: spikeMultiplier,\n    min_views_threshold: minViews,\n    checked_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "compute-spike",
+      "name": "Compute spike ratio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{ $json.is_spike }}", "value2": true }
+          ]
+        }
+      },
+      "id": "if-spike",
+      "name": "If spike detected",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://plausible.io/api/v1/stats/breakdown?site_id={{ $node['SET_DEFAULTS'].json['plausible_site_id'] }}&period=hour&property=visit:source&limit=5",
+        "method": "GET",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['plausible_api_key'] }}" }
+        ]}
+      },
+      "id": "top-referrers",
+      "name": "Top referrers (last hour)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://plausible.io/api/v1/stats/breakdown?site_id={{ $node['SET_DEFAULTS'].json['plausible_site_id'] }}&period=hour&property=event:page&limit=5",
+        "method": "GET",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['plausible_api_key'] }}" }
+        ]}
+      },
+      "id": "top-pages",
+      "name": "Top pages (last hour)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $node['SET_DEFAULTS'].json['operator_slack_webhook_url'] }}",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"text\": \"📈 *Traffic spike* — {{ $node['Compute spike ratio'].json['ratio'] }}× normal\\n• Current hour: {{ $node['Compute spike ratio'].json['current_views'] }} views (vs {{ $node['Compute spike ratio'].json['previous_views'] }} previous hour)\\n• Top referrers: ```{{ JSON.stringify(($node['Top referrers (last hour)'].json.results || []).slice(0,5), null, 2) }}```\\n• Top pages: ```{{ JSON.stringify(($node['Top pages (last hour)'].json.results || []).slice(0,5), null, 2) }}```\"\n}",
+        "options": {}
+      },
+      "id": "alert-slack",
+      "name": "Alert Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Every 15 minutes": { "main": [[{ "node": "SET_DEFAULTS", "type": "main", "index": 0 }]] },
+    "SET_DEFAULTS": { "main": [[{ "node": "Current hour stats", "type": "main", "index": 0 }, { "node": "Previous hour baseline", "type": "main", "index": 0 }]] },
+    "Current hour stats": { "main": [[{ "node": "Compute spike ratio", "type": "main", "index": 0 }]] },
+    "Previous hour baseline": { "main": [[{ "node": "Compute spike ratio", "type": "main", "index": 0 }]] },
+    "Compute spike ratio": { "main": [[{ "node": "If spike detected", "type": "main", "index": 0 }]] },
+    "If spike detected": { "main": [[{ "node": "Top referrers (last hour)", "type": "main", "index": 0 }, { "node": "Top pages (last hour)", "type": "main", "index": 0 }]] },
+    "Top referrers (last hour)": { "main": [[{ "node": "Alert Slack", "type": "main", "index": 0 }]] },
+    "Top pages (last hour)": { "main": [[{ "node": "Alert Slack", "type": "main", "index": 0 }]] }
+  }
+}

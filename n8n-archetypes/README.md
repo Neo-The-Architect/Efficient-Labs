@@ -11,6 +11,10 @@ This directory holds the ready-to-import JSON archetypes that ship as part of th
 | 03 | `03-slack-thread-reply-on-linear-ticket-update.json` | Linear `Issue update` webhook | Signature-verified Slack thread reply (with thread-lookup cache) | Standard (Sovereign tier moves thread-lookup to hosted Postgres) |
 | 04 | `04-calendly-operator-notification-and-resend-confirmation.json` | Calendly `invitee.created` webhook | Signature-verified fan-out to (a) Slack operator alert + (b) Resend confirmation email | Standard (Sovereign tier swaps Resend for hosted SMTP) |
 | 05 | `05-postgres-poll-to-notion-sync.json` | Cron schedule (every 5 min) | Postgres cursor-poll for new rows → Notion page append | Standard (Sovereign tier swaps Notion for hosted wiki / second Postgres) |
+| 06 | `06-stripe-subscription-lifecycle-hooks.json` | Stripe `customer.subscription.{created,updated,deleted}` | Switch-routed Resend lifecycle emails + CRM sync | Pro (Sovereign tier swaps Resend for hosted SMTP) |
+| 07 | `07-inbound-email-parsing-to-crm.json` | Inbound email webhook (Mailgun/Postmark/SendGrid Parse) | Parse + classify + CRM append + conditional operator Slack alert | Pro (Sovereign tier swaps inbound webhook for IMAP poll against hosted mail) |
+| 08 | `08-github-pr-to-linear-ticket.json` | GitHub `pull_request opened` webhook | Linear ticket create + back-write PR comment with ticket URL | Standard (Sovereign tier swaps Linear for hosted Plane.so) |
+| 09 | `09-plausible-traffic-spike-to-operator-alert.json` | Cron schedule (every 15 min) | Plausible stats query + spike heuristic + multi-section Slack alert on detection | Pro (Sovereign tier swaps Plausible for hosted Umami) |
 
 ## How archetypes are used in a client engagement
 
@@ -36,7 +40,8 @@ This directory holds the ready-to-import JSON archetypes that ship as part of th
 
 ## Roadmap (post-launch)
 
-- 06 — Stripe subscription lifecycle hooks (created / updated / canceled)
-- 07 — Inbound email parsing → CRM record
-- 08 — GitHub PR opened → Linear ticket create
-- 09 — Plausible spike → operator alert + auto-traffic-correlation lookup
+- 10 — Calendly cancellation → re-engagement sequence (3-touch Resend follow-ups)
+- 11 — Twilio SMS → operator alert with conversation context
+- 12 — Stripe failed-payment recovery (dunning emails + automatic retry schedule)
+- 13 — Shopify abandoned cart → recovery email series
+- 14 — Inbound RSS / blog post → social-media auto-syndication
