@@ -1,0 +1,139 @@
+{
+  "name": "Archetype 03 — Slack Thread Reply on Linear Ticket Update",
+  "_archetype_metadata": {
+    "tier": "standard",
+    "category": "tooling-bridge",
+    "version": "0.1.0",
+    "description": "Triggered by Linear webhook (Issue updated); verifies the signature, looks up the existing Slack thread for the ticket (or creates one), and posts the update as a thread reply. The starter archetype for any external-tool → Slack thread-of-truth flow.",
+    "operator_action_required": [
+      "Replace <LINEAR_WEBHOOK_SECRET> with the customer's Linear webhook signing secret (from Linear settings → API → Webhooks)",
+      "Replace <SLACK_BOT_TOKEN> with the customer's xoxb-* bot token (scoped to chat:write, channels:read)",
+      "Replace <SLACK_CHANNEL_ID> with the destination channel ID (e.g., C0123456789)",
+      "Replace <THREAD_LOOKUP_TABLE_URL> with the URL of a tiny KV store mapping Linear issue ID → Slack thread_ts (a single Airtable row, Notion property, or in-memory n8n static data — see SET_DEFAULTS note)"
+    ],
+    "deliverable_tier": "standard ($797) — ships as ready-to-import JSON",
+    "sovereign_tier_addon": "For sovereign tier ($1,497), the thread lookup table is hosted in the operator's Postgres (replaces the THREAD_LOOKUP_TABLE_URL HTTP call with a postgres node)",
+    "license": "Efficient Labs n8n archetype library — proprietary, ships under client engagement only"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "linear-webhook",
+        "responseMode": "lastNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "linear-webhook",
+      "name": "Linear webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "linear_webhook_secret", "value": "<LINEAR_WEBHOOK_SECRET>" },
+            { "name": "slack_bot_token", "value": "<SLACK_BOT_TOKEN>" },
+            { "name": "slack_channel_id", "value": "<SLACK_CHANNEL_ID>" },
+            { "name": "thread_lookup_table_url", "value": "<THREAD_LOOKUP_TABLE_URL>" }
+          ]
+        }
+      },
+      "id": "set-defaults",
+      "name": "SET_DEFAULTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Verify Linear webhook signature — fail-closed if signature missing or wrong.\n// Linear posts the HMAC-SHA256 of the raw body in the 'linear-signature' header.\nconst crypto = require('crypto');\nconst sig = $input.first().headers['linear-signature'];\nconst secret = $node['SET_DEFAULTS'].json['linear_webhook_secret'];\nconst rawBody = JSON.stringify($input.first().body);\n\nif (!sig || !secret || secret.startsWith('<')) {\n  return [{ json: { ok: false, error: 'missing_signature_or_secret' } }];\n}\n\nconst expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');\nif (expected !== sig) {\n  return [{ json: { ok: false, error: 'signature_mismatch' } }];\n}\n\nconst event = $input.first().body;\nif (event.type !== 'Issue' || event.action !== 'update') {\n  return [{ json: { ok: false, error: 'unsupported_event', type: event.type, action: event.action } }];\n}\n\nreturn [{ json: { ok: true, issue: event.data, change: event.updatedFrom || {} } }];"
+      },
+      "id": "verify-signature",
+      "name": "Verify Linear signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $node['SET_DEFAULTS'].json['thread_lookup_table_url'] }}?issue_id={{ $json.issue.id }}",
+        "method": "GET",
+        "options": {}
+      },
+      "id": "lookup-thread",
+      "name": "Look up existing Slack thread",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "ticket_id", "value": "={{ $node['Verify Linear signature'].json['issue']['identifier'] }}" },
+            { "name": "ticket_title", "value": "={{ $node['Verify Linear signature'].json['issue']['title'] }}" },
+            { "name": "ticket_url", "value": "={{ $node['Verify Linear signature'].json['issue']['url'] }}" },
+            { "name": "thread_ts", "value": "={{ $node['Look up existing Slack thread'].json['thread_ts'] || '' }}" },
+            { "name": "update_summary", "value": "={{ $node['Verify Linear signature'].json['issue']['stateName'] ? ('moved to ' + $node['Verify Linear signature'].json['issue']['stateName']) : ('updated by ' + ($node['Verify Linear signature'].json['issue']['updatedBy']['name'] || 'unknown')) }}" }
+          ]
+        }
+      },
+      "id": "map-fields",
+      "name": "MAP_FIELDS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://slack.com/api/chat.postMessage",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['slack_bot_token'] }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"channel\": \"{{ $node['SET_DEFAULTS'].json['slack_channel_id'] }}\",\n  \"thread_ts\": \"{{ $node['MAP_FIELDS'].json['thread_ts'] }}\",\n  \"text\": \"🔧 *{{ $node['MAP_FIELDS'].json['ticket_id'] }}* — _{{ $node['MAP_FIELDS'].json['update_summary'] }}_\\n<{{ $node['MAP_FIELDS'].json['ticket_url'] }}|{{ $node['MAP_FIELDS'].json['ticket_title'] }}>\"\n}",
+        "options": {}
+      },
+      "id": "post-slack-reply",
+      "name": "Post Slack thread reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "delivered" },
+            { "name": "delivered_at", "value": "={{ $now.toISOString() }}" },
+            { "name": "ticket_id", "value": "={{ $node['MAP_FIELDS'].json['ticket_id'] }}" }
+          ]
+        }
+      },
+      "id": "set-status",
+      "name": "Set delivery status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Linear webhook": { "main": [[{ "node": "SET_DEFAULTS", "type": "main", "index": 0 }]] },
+    "SET_DEFAULTS": { "main": [[{ "node": "Verify Linear signature", "type": "main", "index": 0 }]] },
+    "Verify Linear signature": { "main": [[{ "node": "Look up existing Slack thread", "type": "main", "index": 0 }]] },
+    "Look up existing Slack thread": { "main": [[{ "node": "MAP_FIELDS", "type": "main", "index": 0 }]] },
+    "MAP_FIELDS": { "main": [[{ "node": "Post Slack thread reply", "type": "main", "index": 0 }]] },
+    "Post Slack thread reply": { "main": [[{ "node": "Set delivery status", "type": "main", "index": 0 }]] }
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "name": "Archetype 05 — Postgres Poll → Notion Record Sync",
+  "_archetype_metadata": {
+    "tier": "standard",
+    "category": "data-sync",
+    "version": "0.1.0",
+    "description": "Schedule-polls a Postgres table for new rows since the last cursor, then appends each new row as a page in a Notion database. The starter archetype for any operational-database → external-tool sync. Cursor is held in n8n workflow static data; the SQL uses parameterized > <cursor> filter to avoid duplicates.",
+    "operator_action_required": [
+      "Replace the Postgres credential block (host, port, database, user, password) with the customer's connection",
+      "Replace <SOURCE_TABLE> with the table to sync (e.g., 'customers' or 'leads')",
+      "Replace <CURSOR_COLUMN> with the column used to detect new rows (e.g., 'id' if monotonic int, or 'created_at' if timestamp)",
+      "Replace <NOTION_TOKEN> with the customer's Notion integration secret (must be granted access to the destination database)",
+      "Replace <NOTION_DATABASE_ID> with the destination database ID (32-hex from the Notion URL)",
+      "Customize MAP_FIELDS to map Postgres columns → Notion properties (each line in the values block maps one column)",
+      "Adjust the schedule cadence in the Cron trigger (default: every 5 minutes)"
+    ],
+    "deliverable_tier": "standard ($797) — ships as ready-to-import JSON",
+    "sovereign_tier_addon": "For sovereign tier ($1,497), Notion is replaced with another Postgres instance or the operator's hosted Outline / BookStack; same poll-and-write pattern with destination swapped",
+    "license": "Efficient Labs n8n archetype library — proprietary, ships under client engagement only"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 5 }]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 5 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "source_table", "value": "<SOURCE_TABLE>" },
+            { "name": "cursor_column", "value": "<CURSOR_COLUMN>" },
+            { "name": "notion_token", "value": "<NOTION_TOKEN>" },
+            { "name": "notion_database_id", "value": "<NOTION_DATABASE_ID>" }
+          ]
+        }
+      },
+      "id": "set-defaults",
+      "name": "SET_DEFAULTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Read the persistent cursor from workflow static data. First run uses '0'\n// (numeric) or '1970-01-01T00:00:00Z' (timestamp) — operator picks based on\n// the cursor column type. Default-zero is safe: SELECT will return all rows\n// on first run, which is intentional for a fresh sync.\nconst staticData = $getWorkflowStaticData('global');\nconst cursorColumn = $node['SET_DEFAULTS'].json['cursor_column'];\nconst isTimestampCursor = cursorColumn.includes('_at') || cursorColumn.includes('time');\nconst defaultCursor = isTimestampCursor ? '1970-01-01T00:00:00Z' : 0;\nconst lastCursor = staticData.lastCursor !== undefined ? staticData.lastCursor : defaultCursor;\nreturn [{ json: { last_cursor: lastCursor, cursor_is_timestamp: isTimestampCursor } }];"
+      },
+      "id": "read-cursor",
+      "name": "Read sync cursor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT * FROM {{ $node['SET_DEFAULTS'].json['source_table'] }} WHERE {{ $node['SET_DEFAULTS'].json['cursor_column'] }} > $1 ORDER BY {{ $node['SET_DEFAULTS'].json['cursor_column'] }} ASC LIMIT 100",
+        "additionalFields": {
+          "queryParams": "={{ $json.last_cursor }}"
+        }
+      },
+      "id": "fetch-new-rows",
+      "name": "Fetch new Postgres rows",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "Name", "value": "={{ $json.name || $json.full_name || $json.email || ('row-' + $json.id) }}" },
+            { "name": "Email", "value": "={{ $json.email || '' }}" },
+            { "name": "Source ID", "value": "={{ $json.id }}" },
+            { "name": "Synced At", "value": "={{ $now.toISOString() }}" }
+          ]
+        }
+      },
+      "id": "map-fields",
+      "name": "MAP_FIELDS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.notion.com/v1/pages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['notion_token'] }}" },
+            { "name": "Notion-Version", "value": "2022-06-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"parent\": { \"database_id\": \"{{ $node['SET_DEFAULTS'].json['notion_database_id'] }}\" },\n  \"properties\": {\n    \"Name\": { \"title\": [{ \"text\": { \"content\": \"{{ $json['Name'] }}\" } }] },\n    \"Email\": { \"email\": \"{{ $json['Email'] }}\" },\n    \"Source ID\": { \"rich_text\": [{ \"text\": { \"content\": \"{{ $json['Source ID'] }}\" } }] },\n    \"Synced At\": { \"date\": { \"start\": \"{{ $json['Synced At'] }}\" } }\n  }\n}",
+        "options": {}
+      },
+      "id": "notion-append",
+      "name": "Append Notion page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Advance the cursor to the highest value we just synced. Persisted across\n// runs in workflow static data. Fail-safe: if no rows were synced this run,\n// leave the cursor unchanged.\nconst staticData = $getWorkflowStaticData('global');\nconst cursorColumn = $node['SET_DEFAULTS'].json['cursor_column'];\nconst rows = $node['Fetch new Postgres rows'].json;\nconst rowsArray = Array.isArray(rows) ? rows : [rows];\n\nif (rowsArray.length === 0 || !rowsArray[0][cursorColumn]) {\n  return [{ json: { advanced: false, last_cursor: staticData.lastCursor } }];\n}\n\nconst maxCursor = rowsArray.reduce((max, r) => {\n  const v = r[cursorColumn];\n  return (max === undefined || v > max) ? v : max;\n}, undefined);\n\nstaticData.lastCursor = maxCursor;\nreturn [{ json: { advanced: true, last_cursor: maxCursor, synced_count: rowsArray.length } }];"
+      },
+      "id": "advance-cursor",
+      "name": "Advance sync cursor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Every 5 minutes": { "main": [[{ "node": "SET_DEFAULTS", "type": "main", "index": 0 }]] },
+    "SET_DEFAULTS": { "main": [[{ "node": "Read sync cursor", "type": "main", "index": 0 }]] },
+    "Read sync cursor": { "main": [[{ "node": "Fetch new Postgres rows", "type": "main", "index": 0 }]] },
+    "Fetch new Postgres rows": { "main": [[{ "node": "MAP_FIELDS", "type": "main", "index": 0 }]] },
+    "MAP_FIELDS": { "main": [[{ "node": "Append Notion page", "type": "main", "index": 0 }]] },
+    "Append Notion page": { "main": [[{ "node": "Advance sync cursor", "type": "main", "index": 0 }]] }
+  }
+}

@@ -8,6 +8,9 @@ This directory holds the ready-to-import JSON archetypes that ship as part of th
 |---|---|---|---|---|
 | 01 | `01-slack-notification-on-webhook.json` | Generic webhook | Slack message via incoming-webhook | Standard |
 | 02 | `02-airtable-on-stripe-checkout.json` | Stripe `checkout.session.completed` | Signature-verified Airtable record insert | Standard (Sovereign tier swaps Airtable for hosted Postgres) |
+| 03 | `03-slack-thread-reply-on-linear-ticket-update.json` | Linear `Issue update` webhook | Signature-verified Slack thread reply (with thread-lookup cache) | Standard (Sovereign tier moves thread-lookup to hosted Postgres) |
+| 04 | `04-calendly-operator-notification-and-resend-confirmation.json` | Calendly `invitee.created` webhook | Signature-verified fan-out to (a) Slack operator alert + (b) Resend confirmation email | Standard (Sovereign tier swaps Resend for hosted SMTP) |
+| 05 | `05-postgres-poll-to-notion-sync.json` | Cron schedule (every 5 min) | Postgres cursor-poll for new rows → Notion page append | Standard (Sovereign tier swaps Notion for hosted wiki / second Postgres) |
 
 ## How archetypes are used in a client engagement
 
@@ -33,8 +36,7 @@ This directory holds the ready-to-import JSON archetypes that ship as part of th
 
 ## Roadmap (post-launch)
 
-- 03 — Slack thread reply on Linear ticket update
-- 04 — Calendly webhook → operator notification + Resend confirmation
-- 05 — Postgres trigger → Notion record sync
 - 06 — Stripe subscription lifecycle hooks (created / updated / canceled)
 - 07 — Inbound email parsing → CRM record
+- 08 — GitHub PR opened → Linear ticket create
+- 09 — Plausible spike → operator alert + auto-traffic-correlation lookup

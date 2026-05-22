@@ -1,0 +1,155 @@
+{
+  "name": "Archetype 04 — Calendly Webhook → Operator Notification + Resend Confirmation",
+  "_archetype_metadata": {
+    "tier": "standard",
+    "category": "scheduling-integration",
+    "version": "0.1.0",
+    "description": "Triggered by Calendly invitee.created webhook; verifies the signature, fans out to (a) an operator alert in Slack and (b) a Resend confirmation email to the invitee. The starter archetype for any booking/scheduling → multi-channel notification flow.",
+    "operator_action_required": [
+      "Replace <CALENDLY_WEBHOOK_SIGNING_KEY> with the customer's Calendly webhook signing key (from Calendly settings → Integrations → Webhooks)",
+      "Replace <SLACK_BOT_TOKEN> with the customer's xoxb-* bot token for operator-channel posts",
+      "Replace <SLACK_OPERATOR_CHANNEL_ID> with the operator's alert channel ID",
+      "Replace <RESEND_API_KEY> with the customer's Resend re_* API key",
+      "Replace <FROM_EMAIL> with the verified sender address (e.g., ops@yourdomain.com)",
+      "Customize the SUBJECT_TEMPLATE and HTML_TEMPLATE in SET_DEFAULTS to match the customer's voice"
+    ],
+    "deliverable_tier": "standard ($797) — ships as ready-to-import JSON",
+    "sovereign_tier_addon": "For sovereign tier ($1,497), Resend is replaced with the customer's hosted SMTP via the n8n emailSend node; the Slack fan-out and signature verification stay identical",
+    "license": "Efficient Labs n8n archetype library — proprietary, ships under client engagement only"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "calendly-webhook",
+        "responseMode": "lastNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "calendly-webhook",
+      "name": "Calendly webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "calendly_signing_key", "value": "<CALENDLY_WEBHOOK_SIGNING_KEY>" },
+            { "name": "slack_bot_token", "value": "<SLACK_BOT_TOKEN>" },
+            { "name": "slack_operator_channel_id", "value": "<SLACK_OPERATOR_CHANNEL_ID>" },
+            { "name": "resend_api_key", "value": "<RESEND_API_KEY>" },
+            { "name": "from_email", "value": "<FROM_EMAIL>" },
+            { "name": "subject_template", "value": "Confirmed: {{ event_name }} on {{ event_start_local }}" },
+            { "name": "html_template", "value": "<p>Hi {{ invitee_name }},</p><p>Your booking for <strong>{{ event_name }}</strong> is confirmed for <strong>{{ event_start_local }}</strong>.</p><p>We'll see you then. Reply to this email if anything changes on your end.</p>" }
+          ]
+        }
+      },
+      "id": "set-defaults",
+      "name": "SET_DEFAULTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Verify Calendly webhook signature — fail-closed if signature missing or wrong.\n// Calendly posts 'calendly-webhook-signature' as 't=<timestamp>,v1=<hmac-sha256>'.\nconst crypto = require('crypto');\nconst sigHeader = $input.first().headers['calendly-webhook-signature'];\nconst secret = $node['SET_DEFAULTS'].json['calendly_signing_key'];\nconst rawBody = JSON.stringify($input.first().body);\n\nif (!sigHeader || !secret || secret.startsWith('<')) {\n  return [{ json: { ok: false, error: 'missing_signature_or_secret' } }];\n}\n\nconst parts = sigHeader.split(',').reduce((acc, p) => {\n  const [k, v] = p.split('='); acc[k] = v; return acc;\n}, {});\n\nconst expected = crypto.createHmac('sha256', secret)\n  .update(parts.t + '.' + rawBody)\n  .digest('hex');\n\nif (expected !== parts.v1) {\n  return [{ json: { ok: false, error: 'signature_mismatch' } }];\n}\n\nconst event = $input.first().body;\nif (event.event !== 'invitee.created') {\n  return [{ json: { ok: false, error: 'unsupported_event', event: event.event } }];\n}\n\nreturn [{ json: { ok: true, payload: event.payload } }];"
+      },
+      "id": "verify-signature",
+      "name": "Verify Calendly signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "invitee_name", "value": "={{ $json.payload.name }}" },
+            { "name": "invitee_email", "value": "={{ $json.payload.email }}" },
+            { "name": "event_name", "value": "={{ $json.payload.scheduled_event.name }}" },
+            { "name": "event_start_utc", "value": "={{ $json.payload.scheduled_event.start_time }}" },
+            { "name": "event_start_local", "value": "={{ new Date($json.payload.scheduled_event.start_time).toLocaleString('en-US', { timeZone: $json.payload.timezone || 'UTC', dateStyle: 'medium', timeStyle: 'short' }) }}" },
+            { "name": "calendly_uri", "value": "={{ $json.payload.scheduled_event.uri }}" }
+          ]
+        }
+      },
+      "id": "map-fields",
+      "name": "MAP_FIELDS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://slack.com/api/chat.postMessage",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['slack_bot_token'] }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"channel\": \"{{ $node['SET_DEFAULTS'].json['slack_operator_channel_id'] }}\",\n  \"text\": \"📅 *New booking* — {{ $node['MAP_FIELDS'].json['event_name'] }}\\n• Invitee: {{ $node['MAP_FIELDS'].json['invitee_name'] }} <{{ $node['MAP_FIELDS'].json['invitee_email'] }}>\\n• Start: {{ $node['MAP_FIELDS'].json['event_start_local'] }}\\n• <{{ $node['MAP_FIELDS'].json['calendly_uri'] }}|View in Calendly>\"\n}",
+        "options": {}
+      },
+      "id": "notify-operator",
+      "name": "Notify operator on Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['resend_api_key'] }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $node['SET_DEFAULTS'].json['from_email'] }}\",\n  \"to\": [\"{{ $node['MAP_FIELDS'].json['invitee_email'] }}\"],\n  \"subject\": \"{{ $node['SET_DEFAULTS'].json['subject_template'].replace('{{ event_name }}', $node['MAP_FIELDS'].json['event_name']).replace('{{ event_start_local }}', $node['MAP_FIELDS'].json['event_start_local']) }}\",\n  \"html\": \"{{ $node['SET_DEFAULTS'].json['html_template'].replace('{{ invitee_name }}', $node['MAP_FIELDS'].json['invitee_name']).replace('{{ event_name }}', $node['MAP_FIELDS'].json['event_name']).replace('{{ event_start_local }}', $node['MAP_FIELDS'].json['event_start_local']) }}\"\n}",
+        "options": {}
+      },
+      "id": "send-confirmation",
+      "name": "Send Resend confirmation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "delivered" },
+            { "name": "delivered_at", "value": "={{ $now.toISOString() }}" },
+            { "name": "invitee_email", "value": "={{ $node['MAP_FIELDS'].json['invitee_email'] }}" }
+          ]
+        }
+      },
+      "id": "set-status",
+      "name": "Set delivery status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Calendly webhook": { "main": [[{ "node": "SET_DEFAULTS", "type": "main", "index": 0 }]] },
+    "SET_DEFAULTS": { "main": [[{ "node": "Verify Calendly signature", "type": "main", "index": 0 }]] },
+    "Verify Calendly signature": { "main": [[{ "node": "MAP_FIELDS", "type": "main", "index": 0 }]] },
+    "MAP_FIELDS": { "main": [[{ "node": "Notify operator on Slack", "type": "main", "index": 0 }, { "node": "Send Resend confirmation", "type": "main", "index": 0 }]] },
+    "Notify operator on Slack": { "main": [[{ "node": "Set delivery status", "type": "main", "index": 0 }]] },
+    "Send Resend confirmation": { "main": [[{ "node": "Set delivery status", "type": "main", "index": 0 }]] }
+  }
+}
