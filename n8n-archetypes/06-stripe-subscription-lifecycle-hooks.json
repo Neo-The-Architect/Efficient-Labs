@@ -1,0 +1,175 @@
+{
+  "name": "Archetype 06 — Stripe Subscription Lifecycle Hooks",
+  "_archetype_metadata": {
+    "tier": "pro",
+    "category": "commerce-integration",
+    "version": "0.1.0",
+    "description": "Triggered by Stripe webhook for customer.subscription.{created,updated,deleted} events. Verifies HMAC signature, routes via Switch node based on event type, executes branch-specific handlers (welcome email on created, change-notification on updated, retention/winback on deleted). The canonical archetype for any SaaS billing lifecycle automation.",
+    "operator_action_required": [
+      "Replace <STRIPE_WEBHOOK_SIGNING_SECRET> with the customer's whsec_* (from Stripe dashboard → Webhooks)",
+      "Replace <RESEND_API_KEY> + <FROM_EMAIL> for the lifecycle emails",
+      "Replace <CRM_WEBHOOK_URL> with the customer's CRM ingest endpoint (Airtable, HubSpot, custom)",
+      "Customize each branch's templates in SET_DEFAULTS — welcome / update / cancellation messages"
+    ],
+    "deliverable_tier": "pro ($1,497) — branching logic + 3 outbound channels makes this a non-trivial integration",
+    "sovereign_tier_addon": "For Sovereign tier deployment, replace Resend with the customer's hosted SMTP, and pipe the CRM webhook to the operator's hosted Postgres-backed customer ledger",
+    "license": "Efficient Labs n8n archetype library — proprietary, ships under client engagement only"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-subscription",
+        "responseMode": "lastNode",
+        "options": { "rawBody": true }
+      },
+      "id": "stripe-webhook",
+      "name": "Stripe webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "stripe_webhook_secret", "value": "<STRIPE_WEBHOOK_SIGNING_SECRET>" },
+            { "name": "resend_api_key", "value": "<RESEND_API_KEY>" },
+            { "name": "from_email", "value": "<FROM_EMAIL>" },
+            { "name": "crm_webhook_url", "value": "<CRM_WEBHOOK_URL>" },
+            { "name": "welcome_subject", "value": "Welcome to {{ product_name }}" },
+            { "name": "welcome_html", "value": "<p>Hi {{ customer_name }},</p><p>Your subscription to <strong>{{ product_name }}</strong> is active.</p>" },
+            { "name": "update_subject", "value": "Your {{ product_name }} subscription was updated" },
+            { "name": "update_html", "value": "<p>Hi {{ customer_name }},</p><p>We made changes to your subscription. Details: {{ change_summary }}.</p>" },
+            { "name": "cancel_subject", "value": "Sorry to see you go" },
+            { "name": "cancel_html", "value": "<p>Hi {{ customer_name }},</p><p>Your subscription has been canceled. If this was a mistake, reply to this email and we'll reactivate.</p>" }
+          ]
+        }
+      },
+      "id": "set-defaults",
+      "name": "SET_DEFAULTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Verify Stripe signature against raw body.\nconst crypto = require('crypto');\nconst sig = $input.first().headers['stripe-signature'];\nconst secret = $node['SET_DEFAULTS'].json['stripe_webhook_secret'];\nconst rawBody = $input.first().body;\n\nif (!sig || !secret || secret.startsWith('<')) {\n  return [{ json: { ok: false, error: 'missing_signature_or_secret' } }];\n}\nconst parts = sig.split(',').reduce((acc, p) => { const [k,v]=p.split('='); acc[k]=v; return acc; }, {});\nconst expected = crypto.createHmac('sha256', secret).update(parts.t + '.' + JSON.stringify(rawBody)).digest('hex');\nif (expected !== parts.v1) return [{ json: { ok: false, error: 'signature_mismatch' } }];\n\nconst event = rawBody;\nconst supported = ['customer.subscription.created','customer.subscription.updated','customer.subscription.deleted'];\nif (!supported.includes(event.type)) {\n  return [{ json: { ok: false, error: 'unsupported_event', type: event.type } }];\n}\nreturn [{ json: { ok: true, event_type: event.type, subscription: event.data.object, customer_id: event.data.object.customer } }];"
+      },
+      "id": "verify-signature",
+      "name": "Verify Stripe signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.event_type }}",
+        "rules": {
+          "rules": [
+            { "operation": "equal", "value2": "customer.subscription.created", "output": 0 },
+            { "operation": "equal", "value2": "customer.subscription.updated", "output": 1 },
+            { "operation": "equal", "value2": "customer.subscription.deleted", "output": 2 }
+          ]
+        }
+      },
+      "id": "route-event",
+      "name": "Route by event type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['resend_api_key'] }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $node['SET_DEFAULTS'].json['from_email'] }}\",\n  \"to\": [\"{{ $node['Verify Stripe signature'].json['subscription']['customer_email'] }}\"],\n  \"subject\": \"{{ $node['SET_DEFAULTS'].json['welcome_subject'] }}\",\n  \"html\": \"{{ $node['SET_DEFAULTS'].json['welcome_html'] }}\"\n}",
+        "options": {}
+      },
+      "id": "send-welcome",
+      "name": "Send welcome email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['resend_api_key'] }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $node['SET_DEFAULTS'].json['from_email'] }}\",\n  \"to\": [\"{{ $node['Verify Stripe signature'].json['subscription']['customer_email'] }}\"],\n  \"subject\": \"{{ $node['SET_DEFAULTS'].json['update_subject'] }}\",\n  \"html\": \"{{ $node['SET_DEFAULTS'].json['update_html'] }}\"\n}",
+        "options": {}
+      },
+      "id": "send-update",
+      "name": "Send update notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.resend.com/emails",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['resend_api_key'] }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $node['SET_DEFAULTS'].json['from_email'] }}\",\n  \"to\": [\"{{ $node['Verify Stripe signature'].json['subscription']['customer_email'] }}\"],\n  \"subject\": \"{{ $node['SET_DEFAULTS'].json['cancel_subject'] }}\",\n  \"html\": \"{{ $node['SET_DEFAULTS'].json['cancel_html'] }}\"\n}",
+        "options": {}
+      },
+      "id": "send-cancel",
+      "name": "Send cancellation email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 600]
+    },
+    {
+      "parameters": {
+        "url": "={{ $node['SET_DEFAULTS'].json['crm_webhook_url'] }}",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"event_type\": \"{{ $node['Verify Stripe signature'].json['event_type'] }}\",\n  \"customer_id\": \"{{ $node['Verify Stripe signature'].json['customer_id'] }}\",\n  \"subscription_id\": \"{{ $node['Verify Stripe signature'].json['subscription']['id'] }}\",\n  \"status\": \"{{ $node['Verify Stripe signature'].json['subscription']['status'] }}\",\n  \"received_at\": \"{{ $now.toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "crm-sync",
+      "name": "Sync to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Stripe webhook": { "main": [[{ "node": "SET_DEFAULTS", "type": "main", "index": 0 }]] },
+    "SET_DEFAULTS": { "main": [[{ "node": "Verify Stripe signature", "type": "main", "index": 0 }]] },
+    "Verify Stripe signature": { "main": [[{ "node": "Route by event type", "type": "main", "index": 0 }]] },
+    "Route by event type": {
+      "main": [
+        [{ "node": "Send welcome email", "type": "main", "index": 0 }],
+        [{ "node": "Send update notification", "type": "main", "index": 0 }],
+        [{ "node": "Send cancellation email", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send welcome email": { "main": [[{ "node": "Sync to CRM", "type": "main", "index": 0 }]] },
+    "Send update notification": { "main": [[{ "node": "Sync to CRM", "type": "main", "index": 0 }]] },
+    "Send cancellation email": { "main": [[{ "node": "Sync to CRM", "type": "main", "index": 0 }]] }
+  }
+}

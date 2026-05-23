@@ -1,0 +1,126 @@
+{
+  "name": "Archetype 08 — GitHub PR Opened → Linear Ticket Create",
+  "_archetype_metadata": {
+    "tier": "standard",
+    "category": "engineering-tooling",
+    "version": "0.1.0",
+    "description": "Triggered by GitHub webhook (pull_request opened/reopened). Verifies HMAC signature, extracts PR metadata, creates a corresponding Linear ticket in the team's review queue, and writes the Linear ticket URL back as a PR comment for the discoverability loop.",
+    "operator_action_required": [
+      "Replace <GITHUB_WEBHOOK_SECRET> with the customer's webhook signing secret",
+      "Replace <LINEAR_API_KEY> with the customer's Linear personal API token",
+      "Replace <LINEAR_TEAM_ID> with the destination team UUID (in Linear UI: Team settings → API → Team ID)",
+      "Replace <LINEAR_REVIEW_STATE_ID> with the workflow state ID for 'Needs Review' (Team settings → Workflow → State ID)",
+      "Replace <GITHUB_PAT> with a fine-grained PAT scoped to write:discussion + pull_request comments on the target repo"
+    ],
+    "deliverable_tier": "standard ($797) — workflow is straightforward but the back-write closes the discoverability loop",
+    "sovereign_tier_addon": "For Sovereign tier, replace Linear with the operator's hosted issue tracker (e.g., Plane.so self-hosted) — flow shape stays identical",
+    "license": "Efficient Labs n8n archetype library — proprietary, ships under client engagement only"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-pr-webhook",
+        "responseMode": "lastNode",
+        "options": { "rawBody": true }
+      },
+      "id": "github-webhook",
+      "name": "GitHub webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "github_webhook_secret", "value": "<GITHUB_WEBHOOK_SECRET>" },
+            { "name": "linear_api_key", "value": "<LINEAR_API_KEY>" },
+            { "name": "linear_team_id", "value": "<LINEAR_TEAM_ID>" },
+            { "name": "linear_review_state_id", "value": "<LINEAR_REVIEW_STATE_ID>" },
+            { "name": "github_pat", "value": "<GITHUB_PAT>" }
+          ]
+        }
+      },
+      "id": "set-defaults",
+      "name": "SET_DEFAULTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Verify GitHub HMAC-SHA256 signature.\nconst crypto = require('crypto');\nconst sig = $input.first().headers['x-hub-signature-256'];\nconst secret = $node['SET_DEFAULTS'].json['github_webhook_secret'];\nconst rawBody = JSON.stringify($input.first().body);\n\nif (!sig || !secret || secret.startsWith('<')) {\n  return [{ json: { ok: false, error: 'missing_signature_or_secret' } }];\n}\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(rawBody).digest('hex');\nif (sig !== expected) return [{ json: { ok: false, error: 'signature_mismatch' } }];\n\nconst event = $input.first().headers['x-github-event'];\nconst body = $input.first().body;\nif (event !== 'pull_request' || !['opened','reopened'].includes(body.action)) {\n  return [{ json: { ok: false, error: 'unsupported_event', event, action: body.action } }];\n}\n\nreturn [{ json: { ok: true, pr: body.pull_request, repo: body.repository, sender: body.sender } }];"
+      },
+      "id": "verify-signature",
+      "name": "Verify GitHub signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.linear.app/graphql",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "={{ $node['SET_DEFAULTS'].json['linear_api_key'] }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"query\": \"mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id identifier url title } } }\",\n  \"variables\": {\n    \"input\": {\n      \"teamId\": \"{{ $node['SET_DEFAULTS'].json['linear_team_id'] }}\",\n      \"stateId\": \"{{ $node['SET_DEFAULTS'].json['linear_review_state_id'] }}\",\n      \"title\": \"Review: {{ $node['Verify GitHub signature'].json['pr']['title'] }}\",\n      \"description\": \"PR by @{{ $node['Verify GitHub signature'].json['sender']['login'] }}\\n\\n{{ $node['Verify GitHub signature'].json['pr']['html_url'] }}\\n\\n{{ $node['Verify GitHub signature'].json['pr']['body'] }}\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "id": "linear-create",
+      "name": "Create Linear ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $node['Verify GitHub signature'].json['repo']['full_name'] }}/issues/{{ $node['Verify GitHub signature'].json['pr']['number'] }}/comments",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $node['SET_DEFAULTS'].json['github_pat'] }}" },
+          { "name": "Accept", "value": "application/vnd.github+json" },
+          { "name": "X-GitHub-Api-Version", "value": "2022-11-28" }
+        ]},
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"body\": \"📋 Linear ticket created: {{ $node['Create Linear ticket'].json['data']['issueCreate']['issue']['url'] }} ({{ $node['Create Linear ticket'].json['data']['issueCreate']['issue']['identifier'] }})\"\n}",
+        "options": {}
+      },
+      "id": "back-write-pr",
+      "name": "Back-write PR comment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "status", "value": "ticket_created" },
+            { "name": "linear_issue", "value": "={{ $node['Create Linear ticket'].json['data']['issueCreate']['issue']['identifier'] }}" }
+          ]
+        }
+      },
+      "id": "set-status",
+      "name": "Set status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "GitHub webhook": { "main": [[{ "node": "SET_DEFAULTS", "type": "main", "index": 0 }]] },
+    "SET_DEFAULTS": { "main": [[{ "node": "Verify GitHub signature", "type": "main", "index": 0 }]] },
+    "Verify GitHub signature": { "main": [[{ "node": "Create Linear ticket", "type": "main", "index": 0 }]] },
+    "Create Linear ticket": { "main": [[{ "node": "Back-write PR comment", "type": "main", "index": 0 }]] },
+    "Back-write PR comment": { "main": [[{ "node": "Set status", "type": "main", "index": 0 }]] }
+  }
+}
