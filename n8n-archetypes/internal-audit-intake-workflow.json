@@ -1,0 +1,266 @@
+{
+  "name": "audit-intake \u2014 Tally webhook \u2192 MemCompute + Resend",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "audit-intake",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook (audit-intake)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "webhookId": "audit-intake"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function randHex(n) {\n  const chars = '0123456789abcdef';\n  let s = '';\n  for (let i = 0; i < n * 2; i++) s += chars[Math.floor(Math.random() * 16)];\n  return s;\n}\n\nfunction smallHash(str) {\n  // FNV-1a-ish \u2014 non-cryptographic, just a stable short id derived from content\n  let h = 2166136261;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = Math.imul(h, 16777619);\n  }\n  return (h >>> 0).toString(16).padStart(8, '0');\n}\n\nconst raw = $input.first().json;\nconst tallyData = raw.data || raw.body?.data || {};\nconst fields = tallyData.fields || [];\n\nconst fieldMap = {};\nfor (const f of fields) {\n  if (f && f.key) fieldMap[f.key] = f.value;\n}\n\nconst submissionId = tallyData.submissionId || fieldMap['submission_id'] || 'sub_' + randHex(8);\nconst stripeSessionId = fieldMap['stripe_checkout_session_id'] || null;\n\nconst submission = {\n  submission_id: submissionId,\n  submitted_at: tallyData.createdAt || new Date().toISOString(),\n  stripe_checkout_session_id: stripeSessionId,\n  client: {\n    legal_name: fieldMap['client_legal_name'] || fieldMap['legal_name'] || '',\n    primary_contact_name: fieldMap['client_contact_name'] || fieldMap['primary_contact_name'] || '',\n    primary_contact_email: fieldMap['client_email'] || fieldMap['primary_contact_email'] || '',\n    role_title: fieldMap['client_role'] || fieldMap['role_title'] || null,\n    industry: fieldMap['client_industry'] || fieldMap['industry'] || 'other',\n    industry_other_note: fieldMap['client_industry_note'] || fieldMap['industry_other_note'] || null,\n    location_count: parseInt(fieldMap['client_locations'] || fieldMap['location_count'] || '1', 10),\n    annual_revenue_range: fieldMap['client_revenue'] || fieldMap['annual_revenue_range'] || 'prefer-not-to-say',\n  },\n  existing_workflows: Array.isArray(fieldMap['existing_workflows']) ? fieldMap['existing_workflows'] : [{\n    workflow_name: fieldMap['workflow_name'] || 'Core Ops Workflow',\n    current_platform: fieldMap['workflow_platform'] || 'zapier',\n    current_platform_other_note: fieldMap['workflow_platform_note'] || null,\n    description: fieldMap['workflow_description'] || 'Default workflow details.',\n    breaks_per_quarter_estimate: parseInt(fieldMap['workflow_breaks'] || '0', 10),\n    maintenance_hours_per_quarter_estimate: parseFloat(fieldMap['workflow_hours'] || '0'),\n    touches_pii: fieldMap['workflow_pii'] === true || fieldMap['workflow_pii'] === 'true',\n    touches_payment_data: fieldMap['workflow_payments'] === true || fieldMap['workflow_payments'] === 'true',\n    touches_health_data: fieldMap['workflow_health'] === true || fieldMap['workflow_health'] === 'true',\n    migration_priority: fieldMap['workflow_priority'] || 'medium',\n  }],\n  integration_requests: Array.isArray(fieldMap['integration_requests']) ? fieldMap['integration_requests'] : [],\n  sovereignty: {\n    current_primary_cloud: fieldMap['sovereignty_cloud'] || 'none',\n    explicit_sovereignty_concern: fieldMap['sovereignty_concern'] === true || fieldMap['sovereignty_concern'] === 'true',\n    sovereignty_concern_note: fieldMap['sovereignty_note'] || null,\n    regulated_industry_flag: fieldMap['sovereignty_regulated'] === true || fieldMap['sovereignty_regulated'] === 'true',\n    regulation_names: Array.isArray(fieldMap['sovereignty_regulations']) ? fieldMap['sovereignty_regulations'] : [],\n  },\n  budget: {\n    audit_tier_purchased: fieldMap['budget_tier'] || 'standard',\n    expected_implementation_budget_usd_range: fieldMap['budget_implementation'] || 'no-budget-yet',\n    expected_retainer_budget_usd_monthly: fieldMap['budget_retainer'] || 'no-retainer',\n    timeline_urgency: fieldMap['budget_urgency'] || 'exploratory',\n  },\n  biggest_pain_point: fieldMap['pain_point'] || 'No main pain point provided.',\n  what_success_looks_like: fieldMap['success_criteria'] || null,\n  constraints_or_caveats: fieldMap['constraints'] || null,\n};\n\nconst errors = [];\nif (!submission.client.legal_name || submission.client.legal_name.length < 2) errors.push('client.legal_name must be at least 2 chars.');\nif (!submission.client.primary_contact_email || !submission.client.primary_contact_email.includes('@')) errors.push('client.primary_contact_email must be a valid email address.');\nif (submission.client.industry === 'other' && !submission.client.industry_other_note) errors.push('industry_other_note is required when industry is other.');\nif (submission.biggest_pain_point.length < 10) errors.push('biggest_pain_point must be at least 10 chars.');\n\nif (errors.length > 0) return [{ json: { ok: false, errors, submission_id: submissionId } }];\n\nconst ts = new Date().toISOString();\nconst dateStr = ts.replace(/[:.]/g, '-');\nconst hash = smallHash(JSON.stringify(submission));\nconst intakeId = 'intake_' + dateStr + '_' + hash;\n\nconst intakeRecord = {\n  id: intakeId,\n  received_at: ts,\n  input_type: 'webhook',\n  source: { channel: 'tally', form: 'audit-intake' },\n  normalized_payload: { intake_submission: submission },\n  quarantine_flags: [],\n  routing_hint: '02_reasoning_matrix',\n};\n\nreturn [{ json: { ok: true, intakeId, intakeRecord, summary: {\n  client_legal_name: submission.client.legal_name,\n  client_email: submission.client.primary_contact_email,\n  client_name: submission.client.primary_contact_name,\n  industry: submission.client.industry,\n  tier: submission.budget.audit_tier_purchased,\n  pain_excerpt: submission.biggest_pain_point.slice(0, 200),\n}}}];"
+      },
+      "id": "validate",
+      "name": "Validate + normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-ok",
+      "name": "If validation passed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=http://100.83.59.73:8767/documents/intake-gate/{{ $json.intakeId }}.md",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  frontmatter: {\n    intake_id: $json.intakeId,\n    received_at: $json.intakeRecord.received_at,\n    client: $json.summary.client_legal_name,\n    email: $json.summary.client_email,\n    industry: $json.summary.industry,\n    tier: $json.summary.tier,\n    source: 'tally-webhook',\n    status: 'open'\n  },\n  body: '# Intake ' + $json.intakeId + '\\n\\n```json\\n' + JSON.stringify($json.intakeRecord, null, 2) + '\\n```'\n}) }}",
+        "options": {}
+      },
+      "id": "mc-put",
+      "name": "PUT intake to MemCompute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "<replace-with-actual-id>",
+          "name": "MemCompute Bearer"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  from: 'founder@efficientlabs.ai',\n  to: ['founder@efficientlabs.ai'],\n  subject: '\ud83d\udea8 New audit intake \u2014 ' + $('Validate + normalize').first().json.summary.client_legal_name,\n  text: '## New audit intake submission\\n\\n' +\n        'Intake ID: ' + $('Validate + normalize').first().json.intakeId + '\\n' +\n        'Client: ' + $('Validate + normalize').first().json.summary.client_legal_name + '\\n' +\n        'Email: ' + $('Validate + normalize').first().json.summary.client_email + '\\n' +\n        'Industry: ' + $('Validate + normalize').first().json.summary.industry + '\\n' +\n        'Tier: ' + $('Validate + normalize').first().json.summary.tier + '\\n\\n' +\n        '## Pain point excerpt\\n' + $('Validate + normalize').first().json.summary.pain_excerpt + '\\n\\n' +\n        '## Next action\\nFollow up with payment link + scoping call within 24h.\\n\\n' +\n        '## Full intake record\\nhttp://100.83.59.73:8767/ui/#/intake-gate/' + $('Validate + normalize').first().json.intakeId + '.json'\n}) }}",
+        "options": {}
+      },
+      "id": "op-email",
+      "name": "Notify operator (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "<replace-with-actual-id>",
+          "name": "Resend API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  from: 'founder@efficientlabs.ai',\n  to: [$('Validate + normalize').first().json.summary.client_email],\n  subject: 'Your AI Sovereignty Audit submission \u2014 Efficient Labs',\n  text: 'Hi ' + ($('Validate + normalize').first().json.intakeRecord.normalized_payload.intake_submission.client.primary_contact_name || 'there') + ',\\n\\n' +\n        'Thank you for submitting your AI Sovereignty Audit intake. Your reference number is:\\n' +\n        '  ' + $('Validate + normalize').first().json.intakeId + '\\n\\n' +\n        'We have received the details for ' + $('Validate + normalize').first().json.summary.client_legal_name + '. The next step is a brief scoping call so we can confirm the audit scope and send the payment link.\\n\\n' +\n        'You will hear from us within 24 hours.\\n\\n' +\n        'If anything is urgent, reply to this email.\\n\\n' +\n        '\u2014 Michael Ward\\nFounder, Efficient Labs\\n  https://efficientlabs.ai'\n}) }}",
+        "options": {}
+      },
+      "id": "client-email",
+      "name": "Confirm to client (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "<replace-with-actual-id>",
+          "name": "Resend API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const r = $('Validate + normalize').first().json; return [{ json: { success: true, intake_id: r.intakeId, message: 'Intake received. Operator notified.' } }];"
+      },
+      "id": "respond-ok",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const r = $input.first().json; return [{ json: { success: false, errors: r.errors, message: 'Validation failed; no intake stored.' } }];"
+      },
+      "id": "respond-fail",
+      "name": "Respond fail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook (audit-intake)": {
+      "main": [
+        [
+          {
+            "node": "Validate + normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate + normalize": {
+      "main": [
+        [
+          {
+            "node": "If validation passed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If validation passed": {
+      "main": [
+        [
+          {
+            "node": "PUT intake to MemCompute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PUT intake to MemCompute": {
+      "main": [
+        [
+          {
+            "node": "Notify operator (Resend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify operator (Resend)": {
+      "main": [
+        [
+          {
+            "node": "Confirm to client (Resend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm to client (Resend)": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "_archetype_metadata": {
+    "description": "Internal audit-intake workflow for the Efficient Labs Tally form. NOT a client deliverable \u2014 this is the production intake pipeline for our own audit product. Lives in efficient-labs n8n at https://n8n.efficientlabs.ai.",
+    "authored": "2026-05-25",
+    "version": "1.0",
+    "authors": [
+      "Claude Opus 4.7",
+      "Operator (handoff)"
+    ],
+    "tested_with_fixtures": [
+      "tests/fixtures/tally-audit-intake-*.json from sovereign-core"
+    ],
+    "webhook_path": "/webhook/audit-intake",
+    "memcompute_target": "intake-gate/<intake_id>.md"
+  }
+}
