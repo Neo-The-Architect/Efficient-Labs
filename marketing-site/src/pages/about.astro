@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="About | Efficient Labs"
+  description="Who runs Efficient Labs, why the firm exists, and what 'sovereign AI infrastructure' actually means in practice."
+  canonicalPath="/about/"
+>
+  <section class="page-hero narrow">
+    <h1>A small firm with a specific point of view.</h1>
+    <p>Efficient Labs is run by Michael Ward (NeoTheArchitect). The firm exists because the gap between "AI automation that demos well" and "AI automation that survives a regulator, a quarterly board review, or a vendor pricing change" is widening, and most operators get told only one side of that gap.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>What we do, in plain terms</h2>
+    <p>We audit AI automation stacks for sovereignty risk. We write deliverables that an operator can hand to their board, a regulator, or a successor without an embarrassed apology. When the audit surfaces something worth building, we sometimes build the replacement — but the audit and the build are separate engagements, and the audit conclusion is never bent toward selling the build.</p>
+    <p>Concretely: a $797 audit that finds nothing wrong is a successful engagement. A $797 audit that finds three load-bearing problems and recommends nothing we sell is also a successful engagement. The trust frame survives both outcomes.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>Why sovereign?</h2>
+    <p>"Sovereign" is not a marketing word here. It means three concrete things:</p>
+    <ol class="check-list">
+      <li><strong>You can run it yourself if the vendor disappears.</strong> The substrate is open enough that lifting and shifting is a project, not a rescue mission.</li>
+      <li><strong>You can answer the question "what touched customer X last Tuesday?"</strong> The audit trail is a first-class artifact, not a debugging-only afterthought.</li>
+      <li><strong>You decide where data lives.</strong> The architecture supports residency, isolation, and deletion as routine operations, not negotiated exceptions.</li>
+    </ol>
+    <p>If any of those three are out of reach for your current stack, that's where the audit starts.</p>
+  </section>
+
+  <section class="section band">
+    <div class="section-heading"><h2>The operating posture</h2></div>
+    <div class="evidence-list">
+      <article>
+        <span>Public</span>
+        <h3>The work is visible.</h3>
+        <p>Architecture decisions, runbooks, infrastructure audits, and the operating framework (Orchestral) all live in public repositories. The receipts compound; you can read them before engaging.</p>
+      </article>
+      <article>
+        <span>Private</span>
+        <h3>Your data is not.</h3>
+        <p>Client engagements are confidential by default. Case studies require explicit opt-in twice — once in the publish policy, once on the published draft.</p>
+      </article>
+      <article>
+        <span>Honest</span>
+        <h3>No invented outcomes.</h3>
+        <p>The four-week followup loop publishes the measured result, including null results and negative ones. The methodology binds the firm to publish what actually happened.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section narrow">
+    <h2>About the operator</h2>
+    <p>Michael Ward has been building infrastructure that has to survive real load for over a decade. The firm name "Efficient Labs" is intentional: efficiency in the engineering sense (less waste, fewer surprises, better signal-to-noise) more than the management-consulting sense.</p>
+    <p>The reason this firm exists rather than a software product: a product can be told what to do. An audit has to look at what's actually there and say something true about it. Those are different practices.</p>
+  </section>
+
+  <section class="section narrow panel">
+    <h2>If you want to start with the work</h2>
+    <p>Read <a href="/methodology/">the methodology</a>, read the <a href="https://github.com/Neo-The-Architect/Efficient-Labs">public repository</a>, then decide whether the audit is worth $797 of your time and operator attention.</p>
+    <a class="button primary" href="https://tally.so/r/81R2zr">Start audit intake</a>
+  </section>
+</BaseLayout>

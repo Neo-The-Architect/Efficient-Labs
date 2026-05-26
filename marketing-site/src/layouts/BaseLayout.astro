@@ -12,6 +12,26 @@ const {
 
 const canonicalUrl = new URL(canonicalPath, siteUrl).toString();
 const imageUrl = new URL(image, siteUrl).toString();
+
+// JSON-LD Organization schema — emitted on every page so any indexable
+// surface anchors back to the same canonical org identity.
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Efficient Labs',
+  url: siteUrl,
+  logo: imageUrl,
+  description: 'Sovereign AI infrastructure firm. Audits and builds for operators who refuse chaos.',
+  founder: {
+    '@type': 'Person',
+    name: 'Michael Ward',
+  },
+  email: 'founder@efficientlabs.ai',
+  sameAs: [
+    'https://github.com/Neo-The-Architect/Efficient-Labs',
+    'https://github.com/Neo-The-Architect/Orchestral',
+  ],
+};
 ---
 <!doctype html>
 <html lang="en">
@@ -32,6 +52,8 @@ const imageUrl = new URL(image, siteUrl).toString();
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
     <title>{title}</title>
+    <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
+    <slot name="head" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -44,6 +66,7 @@ const imageUrl = new URL(image, siteUrl).toString();
         <a href="/audit/">Audit</a>
         <a href="/methodology/">Methodology</a>
         <a href="/case-studies/">Case studies</a>
+        <a href="/about/">About</a>
         <a class="nav-cta" href="https://tally.so/r/81R2zr">Start intake</a>
       </nav>
     </header>

@@ -1,11 +1,58 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Product schema for the audit — the three tiers as offers. Schema.org
+// Service is more accurate than Product for a one-time audit engagement,
+// but Product gives Google better rich-result handling on shopping/listing
+// surfaces. We use Service here to be honest about the engagement shape.
+const auditSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'AI Sovereignty Audit',
+  provider: { '@type': 'Organization', name: 'Efficient Labs', url: 'https://efficientlabs.ai' },
+  description: 'A 72-business-hour audit of automation risk, ownership boundaries, agent governance, secrets posture, and implementation gaps. PDF deliverable.',
+  serviceType: 'AI infrastructure audit',
+  areaServed: { '@type': 'Country', name: 'United States' },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'AI Sovereignty Audit tiers',
+    itemListElement: [
+      {
+        '@type': 'Offer',
+        name: 'Standard',
+        price: '797.00',
+        priceCurrency: 'USD',
+        description: 'Core audit. All five pillars. Implementation priorities. PDF delivery within 72 hours.',
+        availability: 'https://schema.org/InStock',
+        url: 'https://tally.so/r/81R2zr',
+      },
+      {
+        '@type': 'Offer',
+        name: 'Sovereign',
+        price: '1497.00',
+        priceCurrency: 'USD',
+        description: 'Standard audit plus deeper architecture review, operator walkthrough call, and prioritized remediation plan.',
+        availability: 'https://schema.org/InStock',
+        url: 'https://tally.so/r/81R2zr',
+      },
+      {
+        '@type': 'Offer',
+        name: 'Bespoke',
+        priceSpecification: { '@type': 'PriceSpecification', priceCurrency: 'USD' },
+        description: 'Custom-scoped engagement for operators who need system design, hands-on remediation, and delivery support alongside the findings.',
+        availability: 'https://schema.org/InStock',
+        url: 'https://tally.so/r/81R2zr',
+      },
+    ],
+  },
+};
 ---
 <BaseLayout
   title="AI Sovereignty Audit | Efficient Labs"
   description="A 72-business-hour audit of automation risk, ownership boundaries, agent governance, secrets posture, and implementation gaps."
   canonicalPath="/audit/"
 >
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(auditSchema)} />
   <section class="page-hero narrow">
     <h1>72-hour AI Sovereignty Audit.</h1>
     <p>A structured review of your automation risk, ownership boundaries, agent governance, and implementation gaps. Not consulting-speak. Findings you can act on this week.</p>

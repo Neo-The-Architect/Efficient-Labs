@@ -1,2 +1,16 @@
+# Efficient Labs — robots.txt
+#
+# Discovery posture is conservative: BaseLayout still sets a default
+# `meta robots = noindex, nofollow` until the operator flips the launch
+# switch. When that flip happens (one-line change in BaseLayout.astro),
+# this file plus the sitemap below are ready for search-engine ingestion.
+
 User-agent: *
-Disallow: /
+Allow: /
+
+# Block transactional landing pages. These serve the Stripe redirect flow
+# and are not discovery surfaces.
+Disallow: /audit/thank-you/
+Disallow: /audit/cancelled/
+
+Sitemap: https://efficientlabs.ai/sitemap-index.xml
