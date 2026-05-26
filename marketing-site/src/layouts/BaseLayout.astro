@@ -11,7 +11,10 @@ const {
 } = Astro.props;
 
 const canonicalUrl = new URL(canonicalPath, siteUrl).toString();
-const imageUrl = new URL(image, siteUrl).toString();
+// Default to the OG-image (1200×630 wordmark) for social-share previews.
+// Pages can override by passing image="/path-to-other.png".
+const ogImage = image === '/architecture-signal.svg' ? '/og-image.png' : image;
+const imageUrl = new URL(ogImage, siteUrl).toString();
 
 // JSON-LD Organization schema — emitted on every page so any indexable
 // surface anchors back to the same canonical org identity.
@@ -51,6 +54,8 @@ const orgSchema = {
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
+    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="128x128" href="/favicon.png" />
     <title>{title}</title>
     <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
     <slot name="head" />
