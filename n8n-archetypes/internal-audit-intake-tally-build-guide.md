@@ -1,10 +1,35 @@
 # Tally form build guide — AI Sovereignty Audit Intake
 
 **Audience:** operator (Michael / NeoTheArchitect)
-**Time budget:** ~20 minutes in the Tally UI
 **Webhook target (live + tested 2026-05-25):** `https://n8n.efficientlabs.ai/webhook/audit-intake`
 
-This guide walks you through creating the canonical AI Sovereignty Audit intake form in Tally. The n8n workflow that receives the webhook is already built, tested, and active (see `internal-audit-intake-workflow.json` + ADR-0022). All you need to do is build the form and wire the webhook.
+This guide gives **two paths** for building the canonical AI Sovereignty Audit intake form in Tally. The n8n workflow that receives the webhook is already built, tested, and active (see `internal-audit-intake-workflow.json` + ADR-0022).
+
+## TL;DR — the form is already built (2026-05-26)
+
+The form lives at **https://tally.so/r/81R2zr** (form ID `81R2zr`, webhook ID `wQ5OrG`). Built deterministically via the API using `tally-form-build.py` in this directory. Re-run that script to rebuild on a different Tally workspace or after wholesale schema changes.
+
+## Path A — API rebuild (Claude / agent-driven, recommended for re-deploys)
+
+```bash
+# Requires TALLY_API_KEY in /home/neo/.config/sovereign-core/vault.env
+python3 ~/work/Efficient-Labs/n8n-archetypes/tally-form-build.py
+python3 ~/work/Efficient-Labs/n8n-archetypes/tally-webhook-wire.py
+```
+
+The script PATCHes the existing draft form (or creates a new one — adjust `FORM_ID`), pushes all 117 blocks (28 fields + title + intro), promotes form status to PUBLISHED, and returns the public share URL. `tally-webhook-wire.py` then registers the n8n webhook subscription via the `/webhooks` endpoint.
+
+**Tally API quirks worth knowing** (the OpenAPI spec misleads in places — confirmed at build time 2026-05-26):
+
+- `DROPDOWN`, `CHECKBOXES`, `MULTI_SELECT` are NOT block types — only `groupType` values. Don't try to add container blocks of these types.
+- Each block's `groupType` must equal its own `type` (for LABEL + input types). Only `OPTION` blocks take the parent container type as their `groupType`.
+- `OPTION` blocks in a group need monotonic 0-indexed `index` + correct `isFirst` / `isLast`.
+- `TEXT` / `FORM_TITLE` blocks reject `index/isFirst/isLast` in payload.
+- Cloudflare WAF (api.tally.so) bans default `python-urllib` User-Agent on POST/PATCH — script spoofs Chrome UA.
+
+## Path B — Browser build (manual fallback if the API ever breaks)
+
+The original 20-minute UI walkthrough lives below. Same field spec + field keys; just point-and-click in the Tally UI instead of programmatic.
 
 ---
 
