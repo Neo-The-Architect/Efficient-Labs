@@ -6,10 +6,10 @@ Operational scripts that run on the production VPS. Tracked here so changes are 
 
 Health-check + alerting cron for the Efficient Labs launch substrate. Probes critical services every 5 minutes (via cron). Maintains per-service consecutive-failure counters in `/home/neo/.cache/launch-supervisor/`. Alerts the operator via Resend email when a service crosses the failure threshold (default: 3 consecutive failures = ~15 min of downtime), and sends an "all clear" when it recovers.
 
-Services monitored:
+Services monitored (`${EL_INTERNAL_HOST}` is the Tailscale-private VPS address sourced from vault — never hardcoded in source):
 
-- `n8n` (HTTP 200 on `http://100.83.59.73:5678/healthz`)
-- MemCompute (HTTP 200 on `http://100.83.59.73:8767/health`)
+- `n8n` (HTTP 200 on `http://${EL_INTERNAL_HOST}:5678/healthz`)
+- MemCompute (HTTP 200 on `http://${EL_INTERNAL_HOST}:8767/health`)
 - n8n public (HTTP 200 on `https://n8n.efficientlabs.ai/healthz`)
 - Tally form (HTTP 200 on `https://tally.so/r/81R2zr`)
 - audit-intake n8n workflow (n8n API: `workflow.active=true`)

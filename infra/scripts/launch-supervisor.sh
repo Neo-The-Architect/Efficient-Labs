@@ -8,8 +8,8 @@
 # and sends an "all clear" when it recovers.
 #
 # Services monitored:
-#   - n8n           (HTTP 200 on http://100.83.59.73:5678/healthz)
-#   - MemCompute    (HTTP 200 on http://100.83.59.73:8767/health)
+#   - n8n           (HTTP 200 on http://${EL_INTERNAL_HOST}:5678/healthz)
+#   - MemCompute    (HTTP 200 on http://${EL_INTERNAL_HOST}:8767/health)
 #   - n8n public    (HTTP 200 on https://n8n.efficientlabs.ai/healthz)
 #   - Tally form    (HTTP 200 on https://tally.so/r/81R2zr)
 #   - audit-intake n8n workflow (n8n API: workflow.active=true)
@@ -34,6 +34,12 @@ trap 'diag "EXIT  code=$?  line=$LINENO"' EXIT
 trap 'diag "ERR   code=$?  line=$LINENO  cmd=${BASH_COMMAND:0:60}"' ERR
 
 VAULT="/etc/efficient-labs/vault.env"
+# Parameterize internal-host references via vault so Tailscale topology
+# never appears in this source file (the CI anonymization-grep gate is the
+# enforcement mechanism — see ADR-pending). Default falls back to localhost
+# for dev/test environments that don't have the vault var set.
+EL_INTERNAL_HOST="$(grep '^EL_INTERNAL_HOST=' "$VAULT" 2>/dev/null | cut -d= -f2- || true)"
+EL_INTERNAL_HOST="${EL_INTERNAL_HOST:-127.0.0.1}"
 STATE_DIR="/var/lib/efficient-labs/launch-supervisor-state"
 LOG="/var/log/efficient-labs/launch-supervisor.log"
 THRESHOLD="${SUPERVISOR_THRESHOLD:-3}"
@@ -145,7 +151,7 @@ probe_n8n_workflow() {
   [[ -z "$N8N_API_KEY" ]] && { record_result "$svc" "false" "N8N_API_KEY missing"; return; }
   local active
   active=$(curl -s --max-time 5 -H "X-N8N-API-KEY: $N8N_API_KEY" \
-    "http://100.83.59.73:5678/api/v1/workflows/$wf_id" \
+    "http://${EL_INTERNAL_HOST}:5678/api/v1/workflows/$wf_id" \
     | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('active', False))" 2>/dev/null || echo "false")
   if [[ "$active" == "True" ]]; then
     record_result "$svc" "true" "n8n workflow $wf_id active=true"
@@ -169,9 +175,9 @@ diag "before-log-tick"
 log "supervisor tick"
 diag "after-log-tick"
 
-probe_http "n8n-local"    "http://100.83.59.73:5678/healthz"
+probe_http "n8n-local"    "http://${EL_INTERNAL_HOST}:5678/healthz"
 probe_http "n8n-public"   "https://n8n.efficientlabs.ai/healthz"
-probe_http "memcompute"   "http://100.83.59.73:8767/health"
+probe_http "memcompute"   "http://${EL_INTERNAL_HOST}:8767/health"
 probe_http "tally-form"   "https://tally.so/r/81R2zr"
 
 probe_systemd "n8n-unit"         "n8n.service"
