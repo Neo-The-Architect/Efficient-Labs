@@ -19,9 +19,9 @@
 # Vault-aware. Never echoes secrets.
 
 set -euo pipefail
-DIAG="/home/neo/log/sup-diag.log"
-DIAG_TMP="/tmp/sup-diag.log"
-DIAG_VAR="/var/tmp/sup-diag.log"
+DIAG="/var/log/efficient-labs/sup-diag.log"
+DIAG_TMP="/var/log/efficient-labs/sup-diag-tmp.log"
+DIAG_VAR="/var/log/efficient-labs/sup-diag-var.log"
 diag() {
   local msg="[$(date -u +%FT%TZ)] $$  $*"
   # Try three paths; whichever succeeds reveals what cron's sandbox permits.
@@ -33,9 +33,9 @@ diag "entry  pid=$$  ppid=$PPID  user=$(whoami)  pwd=$PWD"
 trap 'diag "EXIT  code=$?  line=$LINENO"' EXIT
 trap 'diag "ERR   code=$?  line=$LINENO  cmd=${BASH_COMMAND:0:60}"' ERR
 
-VAULT="/home/neo/.config/sovereign-core/vault.env"
-STATE_DIR="/home/neo/.cache/launch-supervisor"
-LOG="/home/neo/log/launch-supervisor.log"
+VAULT="/etc/efficient-labs/vault.env"
+STATE_DIR="/var/lib/efficient-labs/launch-supervisor-state"
+LOG="/var/log/efficient-labs/launch-supervisor.log"
 THRESHOLD="${SUPERVISOR_THRESHOLD:-3}"
 
 mkdir -p "$STATE_DIR" "$(dirname "$LOG")"
@@ -156,7 +156,7 @@ probe_n8n_workflow() {
 
 probe_systemd() {
   local svc="$1" unit="$2"
-  if sudo -n systemctl is-active "$unit" >/dev/null 2>&1; then
+  if systemctl is-active "$unit" >/dev/null 2>&1; then
     record_result "$svc" "true" "systemd unit active"
   else
     record_result "$svc" "false" "systemd unit not active"
