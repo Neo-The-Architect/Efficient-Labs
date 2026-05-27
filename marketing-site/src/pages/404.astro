@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Page not found | Efficient Labs"
+  description="The page you tried to reach is not here. Try one of the links below."
+  canonicalPath="/404/"
+>
+  <section class="page-hero narrow">
+    <h1>That page is not here.</h1>
+    <p>The URL you tried did not match any page on this site. The site has a small surface area; the links below cover most of it.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>Where to go next</h2>
+    <ul class="check-list">
+      <li><a href="/">Home</a> — what the firm does and what's available right now.</li>
+      <li><a href="/audit/">The audit</a> — pillars, deliverable, tiers.</li>
+      <li><a href="/methodology/">The methodology</a> — how we operate.</li>
+      <li><a href="/case-studies/">Case studies</a> — engagement writeups (empty until the first one publishes).</li>
+      <li><a href="/about/">About</a> — who runs the firm.</li>
+      <li><a href="https://tally.so/r/81R2zr">Start an audit intake</a> — the form takes 5–10 minutes.</li>
+    </ul>
+  </section>
+
+  <section class="section narrow">
+    <h2>If you think this is a broken link on our side</h2>
+    <p>Send the URL to <a href="mailto:founder@efficientlabs.ai">founder@efficientlabs.ai</a> and we'll fix it.</p>
+  </section>
+</BaseLayout>

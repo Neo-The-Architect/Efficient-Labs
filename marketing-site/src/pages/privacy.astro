@@ -1,0 +1,111 @@
+---
+{/* PRIVACY POLICY — v0.1 launch baseline.
+    OPERATOR REVIEW REQUIRED before launch. Items flagged "[verify]" depend
+    on entity status (LLC vs. sole-prop), state of incorporation, and current
+    sub-processor list. Source material in /legal/data-handling.md +
+    /legal/vendor-list.md. Counsel review recommended before first paying
+    customer if this is the customer-facing copy of record. */}
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Privacy Policy | Efficient Labs"
+  description="How Efficient Labs collects, uses, and protects information when you engage our AI Sovereignty Audit and related services."
+  canonicalPath="/privacy/"
+>
+  <section class="page-hero narrow">
+    <h1>Privacy Policy</h1>
+    <p>Last updated: 2026-05-27.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>Who we are</h2>
+    <p>This policy describes the privacy practices of Efficient Labs ("we", "us", "the firm"), operated by Michael Ward under the trade name "Efficient Labs". Questions go to <a href="mailto:founder@efficientlabs.ai">founder@efficientlabs.ai</a>.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>What information we collect</h2>
+    <p>We collect only the information you knowingly provide to us, plus a small set of operational records that come from running our services.</p>
+    <h3>Information you provide</h3>
+    <ul class="check-list">
+      <li><strong>Audit intake form.</strong> When you fill our intake form (hosted by Tally Forms), we receive the fields you submit: company name, your name, email, role, industry, automation stack details, sovereignty concerns, regulations that apply, budget range, urgency, and any free-text you write about your situation.</li>
+      <li><strong>Payment information.</strong> When you complete payment for an audit, Stripe collects your card and billing details directly. We do not see your card number; we receive only the order amount, the receipt email, the country of payment, and a transaction reference.</li>
+      <li><strong>Email correspondence.</strong> Anything you write to us via email — including replies to deliverable emails — is stored in our email systems and may be referenced when responding to you.</li>
+    </ul>
+    <h3>Operational records</h3>
+    <ul class="check-list">
+      <li><strong>Delivery records.</strong> A record that an audit was delivered to you, when it was delivered, and the email address it went to. Stored for at least the warranty period and as required by tax/business records law.</li>
+      <li><strong>Server logs.</strong> Our infrastructure produces operational logs (timestamps, request paths, status codes) that are stored on our servers and used for debugging and incident response. We do not log audit content beyond what is necessary to deliver it.</li>
+    </ul>
+  </section>
+
+  <section class="section narrow">
+    <h2>How we use this information</h2>
+    <ul class="check-list">
+      <li>To scope, generate, and deliver the AI Sovereignty Audit you booked.</li>
+      <li>To process your payment and provide receipts.</li>
+      <li>To respond to questions and provide post-delivery support.</li>
+      <li>To improve our service — for example, by using anonymized patterns from past engagements to refine our audit methodology. We do not use your identifiable data to train external models.</li>
+    </ul>
+    <p>We do not sell your information. We do not share it with third parties for advertising or marketing purposes.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>Who we share information with (sub-processors)</h2>
+    <p>To run our service we use a small set of vendors. Each receives only the data necessary for its role:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Vendor</th><th>Role</th><th>Data they receive</th></tr></thead>
+        <tbody>
+          <tr><td>Tally Forms</td><td>Intake form hosting</td><td>Form submission contents</td></tr>
+          <tr><td>Stripe</td><td>Payment processing</td><td>Card and billing details, transaction record</td></tr>
+          <tr><td>Anthropic (Claude)</td><td>AI assistance for audit generation</td><td>Your intake submission, used as context to draft the deliverable</td></tr>
+          <tr><td>Resend</td><td>Transactional email delivery</td><td>Your email address and email content</td></tr>
+          <tr><td>Cloudflare</td><td>Site hosting, DNS, network protection</td><td>HTTP request metadata only</td></tr>
+          <tr><td>Google Workspace</td><td>Operator's email and calendar</td><td>Inbound and outbound correspondence with us</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="status-note">If our sub-processor list changes, we update this page. The current list is also kept in our public repository at <code>/legal/vendor-list.md</code>.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>How long we keep your information</h2>
+    <ul class="check-list">
+      <li><strong>Intake submissions and audit deliverables:</strong> kept for at least 12 months after delivery, then archived or deleted at your request.</li>
+      <li><strong>Payment records:</strong> kept as required by tax and business records law (typically 7 years).</li>
+      <li><strong>Email correspondence:</strong> kept as part of normal email history; no automatic deletion.</li>
+    </ul>
+  </section>
+
+  <section class="section narrow">
+    <h2>Your rights</h2>
+    <p>You can ask us at any time to:</p>
+    <ul class="check-list">
+      <li>Tell you what information we hold about you.</li>
+      <li>Correct anything that is wrong.</li>
+      <li>Delete your information, subject to records we are required to keep by law.</li>
+      <li>Provide a copy of your information in a portable format.</li>
+    </ul>
+    <p>Email <a href="mailto:founder@efficientlabs.ai">founder@efficientlabs.ai</a> with the request. We respond within 14 business days.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>Security posture</h2>
+    <p>We treat client data with the same discipline we audit for. Concretely: data at rest is on encrypted disks; access requires authentication; our infrastructure is on a private network not reachable from the public internet except where deliberately exposed for service. Our incident-disclosure policy is published in <code>/legal/incident-disclosure.md</code> in our public repository.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>Children</h2>
+    <p>This service is for businesses. We do not knowingly collect information from anyone under 18.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>Changes to this policy</h2>
+    <p>If we change this policy, the "Last updated" date at the top changes, and material changes are flagged with a clear notice on this page for at least 30 days.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>Contact</h2>
+    <p>Email: <a href="mailto:founder@efficientlabs.ai">founder@efficientlabs.ai</a></p>
+  </section>
+</BaseLayout>

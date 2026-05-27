@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Checkout cancelled | Efficient Labs"
+  description="Your audit checkout was cancelled. Your intake details are saved — you can complete payment later or contact us with questions."
+  canonicalPath="/audit/cancelled/"
+>
+  <section class="page-hero narrow">
+    <h1>Checkout cancelled.</h1>
+    <p>No charge was made. Your intake details have been saved and we'll hold them for 30 days.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>If you changed your mind</h2>
+    <p>If you'd like to complete your booking later, you can re-submit the intake form or reply to the confirmation email we sent you. Your original intake reference will resume the booking.</p>
+    <a class="button primary" href="https://tally.so/r/81R2zr">Restart audit intake</a>
+  </section>
+
+  <section class="section narrow">
+    <h2>If you have questions first</h2>
+    <p>Reply to the confirmation email we sent you — we'll answer scope, scheduling, and tier-fit questions before you complete payment.</p>
+    <a class="button secondary" href="/audit/">Re-read the audit outline</a>
+  </section>
+</BaseLayout>
