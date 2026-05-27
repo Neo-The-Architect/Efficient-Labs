@@ -1,7 +1,6 @@
 # Tally form build guide — AI Sovereignty Audit Intake
 
 **Audience:** operator (Michael / NeoTheArchitect)
-<<<<<<< HEAD
 **Webhook target (live + tested 2026-05-25):** `https://n8n.efficientlabs.ai/webhook/audit-intake`
 
 This guide gives **two paths** for building the canonical AI Sovereignty Audit intake form in Tally. The n8n workflow that receives the webhook is already built, tested, and active (see `internal-audit-intake-workflow.json` + ADR-0022).
@@ -30,13 +29,7 @@ The script PATCHes the existing draft form (or creates a new one — adjust `FOR
 
 ## Path B — Browser build (manual fallback if the API ever breaks)
 
-The original 20-minute UI walkthrough lives below. Same field spec + field keys; just point-and-click in the Tally UI instead of programmatic.
-=======
-**Time budget:** ~20 minutes in the Tally UI
-**Webhook target (live + tested 2026-05-25):** `https://n8n.efficientlabs.ai/webhook/audit-intake`
-
-This guide walks you through creating the canonical AI Sovereignty Audit intake form in Tally. The n8n workflow that receives the webhook is already built, tested, and active (see `internal-audit-intake-workflow.json` + ADR-0022). All you need to do is build the form and wire the webhook.
->>>>>>> origin/main
+**Time budget:** ~20 minutes in the Tally UI. The original UI walkthrough lives below. Same field spec + field keys as Path A; just point-and-click in the Tally UI instead of programmatic.
 
 ---
 
