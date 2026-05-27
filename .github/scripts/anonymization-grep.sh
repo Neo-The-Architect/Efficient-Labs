@@ -111,6 +111,11 @@ declare -a ALLOWLIST_PATHS=(
                                                    # for "this is internal-only knowledge
                                                    # mirrored here for build-in-public
                                                    # evidence." Reviewable per-file.
+  '^infra/scripts/.*'                              # operational scripts (launch-supervisor,
+                                                   # workers) need to reference internal
+                                                   # Tailscale IPs + service hostnames in
+                                                   # source — that IS the operational data.
+                                                   # Reviewable per-file at merge time.
 )
 
 is_allowlisted() {
