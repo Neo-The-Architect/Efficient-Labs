@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Case Studies | Efficient Labs"
+  description="Anonymized engagement writeups: what we audited, what we shipped, what changed measurably four weeks later."
+  canonicalPath="/case-studies/"
+>
+  <section class="page-hero narrow">
+    <h1>Case studies are a side effect of the work.</h1>
+    <p>We publish anonymized writeups of completed engagements: the audit findings, the migration shipped, and the followup-loop outcome four weeks after delivery. No invented success stories, no client logos before the engagement is real, no marketing-led case studies.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>Status</h2>
+    <p>Booking opened in May 2026. We publish a case study from each engagement that crosses two gates:</p>
+    <ul class="check-list">
+      <li>The client's <code>PUBLISH_POLICY.md</code> has the case-study checkbox set <strong>yes</strong>.</li>
+      <li>The four-week followup loop has produced a measurable outcome (positive, negative, or null — we publish all three).</li>
+    </ul>
+    <p>Until the first engagements clear both gates, this page is empty by design. The discipline is build-in-public, not market-in-public.</p>
+  </section>
+
+  <section class="section narrow">
+    <h2>What a case study looks like when it lands</h2>
+    <p>Each case study covers five fields, in this order:</p>
+    <ol class="check-list">
+      <li><strong>Situation.</strong> The client's stated pain point at intake, the workflows reported, the tier purchased.</li>
+      <li><strong>Findings.</strong> The most-load-bearing gap the audit surfaced — usually one of: vendor lock-in, sovereignty drift, audit-trail thinness, observability cost.</li>
+      <li><strong>What we shipped.</strong> The concrete migration steps the client executed (or had us execute under a separate engagement), and the prerequisites we flagged.</li>
+      <li><strong>Outcome at the followup loop.</strong> Numeric where possible (break frequency change, maintenance hours change, cost delta, time-to-detect change). Honest where the numbers don't move yet.</li>
+      <li><strong>What we'd do differently.</strong> The decision in the engagement that, with hindsight, would have changed direction. Every engagement gets this section.</li>
+    </ol>
+    <p>Anonymized by default. The client name only appears if they explicitly opt in <strong>twice</strong> — once in their publish policy and once in writing on the published draft.</p>
+  </section>
+
+  <section class="section narrow panel">
+    <h2>If you want your engagement published</h2>
+    <p>Most engagements stay private — that's the default. If you'd like yours considered for public writeup, set the case-study flag in your publish policy at any time before, during, or after delivery. You always have the right to revoke it before publication.</p>
+    <a class="button secondary" href="https://github.com/Neo-The-Architect/Efficient-Labs/blob/main/case-studies/README.md">How case studies get here (in the public repo)</a>
+  </section>
+
+  <section class="section narrow">
+    <h2>Methodology + receipts in the meantime</h2>
+    <p>Until the first case studies publish, you can read how we operate in three places:</p>
+    <ul class="check-list">
+      <li><a href="/methodology/">The methodology page</a> — operator gates, agent execution boundaries, evidence trails.</li>
+      <li><a href="https://github.com/Neo-The-Architect/Efficient-Labs">The public repository</a> — ADRs, runbooks, infrastructure audits, commit history.</li>
+      <li><a href="https://github.com/Neo-The-Architect/Orchestral">Orchestral</a> — the open-source methodology framework.</li>
+    </ul>
+    <p class="status-note">Receipts compound. Trust accretes through visible decisions, not through claims.</p>
+  </section>
+</BaseLayout>
