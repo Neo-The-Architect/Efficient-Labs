@@ -8,8 +8,8 @@
 # and sends an "all clear" when it recovers.
 #
 # Services monitored:
-#   - n8n           (HTTP 200 on http://100.83.59.73:5678/healthz)
-#   - MemCompute    (HTTP 200 on http://100.83.59.73:8767/health)
+#   - n8n           (HTTP 200 on http://${EL_INTERNAL_HOST}:5678/healthz)
+#   - MemCompute    (HTTP 200 on http://${EL_INTERNAL_HOST}:8767/health)
 #   - n8n public    (HTTP 200 on https://n8n.efficientlabs.ai/healthz)
 #   - Tally form    (HTTP 200 on https://tally.so/r/81R2zr)
 #   - audit-intake n8n workflow (n8n API: workflow.active=true)
@@ -19,9 +19,9 @@
 # Vault-aware. Never echoes secrets.
 
 set -euo pipefail
-DIAG="/home/neo/log/sup-diag.log"
-DIAG_TMP="/tmp/sup-diag.log"
-DIAG_VAR="/var/tmp/sup-diag.log"
+DIAG="/var/log/efficient-labs/sup-diag.log"
+DIAG_TMP="/var/log/efficient-labs/sup-diag-tmp.log"
+DIAG_VAR="/var/log/efficient-labs/sup-diag-var.log"
 diag() {
   local msg="[$(date -u +%FT%TZ)] $$  $*"
   # Try three paths; whichever succeeds reveals what cron's sandbox permits.
@@ -33,9 +33,15 @@ diag "entry  pid=$$  ppid=$PPID  user=$(whoami)  pwd=$PWD"
 trap 'diag "EXIT  code=$?  line=$LINENO"' EXIT
 trap 'diag "ERR   code=$?  line=$LINENO  cmd=${BASH_COMMAND:0:60}"' ERR
 
-VAULT="/home/neo/.config/sovereign-core/vault.env"
-STATE_DIR="/home/neo/.cache/launch-supervisor"
-LOG="/home/neo/log/launch-supervisor.log"
+VAULT="/etc/efficient-labs/vault.env"
+# Parameterize internal-host references via vault so Tailscale topology
+# never appears in this source file (the CI anonymization-grep gate is the
+# enforcement mechanism — see ADR-pending). Default falls back to localhost
+# for dev/test environments that don't have the vault var set.
+EL_INTERNAL_HOST="$(grep '^EL_INTERNAL_HOST=' "$VAULT" 2>/dev/null | cut -d= -f2- || true)"
+EL_INTERNAL_HOST="${EL_INTERNAL_HOST:-127.0.0.1}"
+STATE_DIR="/var/lib/efficient-labs/launch-supervisor-state"
+LOG="/var/log/efficient-labs/launch-supervisor.log"
 THRESHOLD="${SUPERVISOR_THRESHOLD:-3}"
 
 mkdir -p "$STATE_DIR" "$(dirname "$LOG")"
@@ -145,7 +151,7 @@ probe_n8n_workflow() {
   [[ -z "$N8N_API_KEY" ]] && { record_result "$svc" "false" "N8N_API_KEY missing"; return; }
   local active
   active=$(curl -s --max-time 5 -H "X-N8N-API-KEY: $N8N_API_KEY" \
-    "http://100.83.59.73:5678/api/v1/workflows/$wf_id" \
+    "http://${EL_INTERNAL_HOST}:5678/api/v1/workflows/$wf_id" \
     | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('active', False))" 2>/dev/null || echo "false")
   if [[ "$active" == "True" ]]; then
     record_result "$svc" "true" "n8n workflow $wf_id active=true"
@@ -156,7 +162,7 @@ probe_n8n_workflow() {
 
 probe_systemd() {
   local svc="$1" unit="$2"
-  if sudo -n systemctl is-active "$unit" >/dev/null 2>&1; then
+  if systemctl is-active "$unit" >/dev/null 2>&1; then
     record_result "$svc" "true" "systemd unit active"
   else
     record_result "$svc" "false" "systemd unit not active"
@@ -169,9 +175,9 @@ diag "before-log-tick"
 log "supervisor tick"
 diag "after-log-tick"
 
-probe_http "n8n-local"    "http://100.83.59.73:5678/healthz"
+probe_http "n8n-local"    "http://${EL_INTERNAL_HOST}:5678/healthz"
 probe_http "n8n-public"   "https://n8n.efficientlabs.ai/healthz"
-probe_http "memcompute"   "http://100.83.59.73:8767/health"
+probe_http "memcompute"   "http://${EL_INTERNAL_HOST}:8767/health"
 probe_http "tally-form"   "https://tally.so/r/81R2zr"
 
 probe_systemd "n8n-unit"         "n8n.service"
